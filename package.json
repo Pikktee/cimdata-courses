@@ -21,12 +21,12 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
-    "better-sqlite3": "^12.8.0",
     "cheerio": "^1.2.0",
     "date-fns": "^4.1.0",
     "next": "^16.2.1",
+    "pg": "^8.20.0",
     "playwright": "^1.56.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"

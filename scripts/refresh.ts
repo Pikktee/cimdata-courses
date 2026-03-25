@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { refreshCoursesFromSource } from "@/lib/courses";
 
 async function main() {

@@ -1,6 +1,8 @@
 import { CourseBrowser } from "@/components/CourseBrowser";
 import { getCoursesByStartDate, getLatestRefreshRun } from "@/lib/courses";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const initialData = await getCoursesByStartDate(null);
   const latestRefresh = await getLatestRefreshRun();

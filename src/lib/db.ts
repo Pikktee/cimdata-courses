@@ -1,12 +1,21 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-const rawDatabaseUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-const sqlitePath = rawDatabaseUrl.startsWith("file:")
-  ? rawDatabaseUrl.replace(/^file:/, "")
-  : rawDatabaseUrl;
-const adapter = new PrismaBetterSqlite3({ url: sqlitePath });
+const databaseUrl = process.env.DATABASE_URL?.trim();
+
+if (!databaseUrl || !/^(postgres|postgresql):\/\//.test(databaseUrl)) {
+  throw new Error(
+    "Ungültige oder fehlende DATABASE_URL. Bitte prüfe deine .env (Supabase Pooling URL)."
+  );
+}
+
+const pool = new Pool({
+  connectionString: databaseUrl
+});
+
+const adapter = new PrismaPg(pool);
 
 export const db =
   globalForPrisma.prisma ??
