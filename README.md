@@ -4,15 +4,16 @@ Eine Webanwendung zur Anzeige von CIMDATA-Kursen (nur Kurse, keine Kurspakete) m
 
 ## Kurzbeschreibung
 
-Die App lädt Kursdaten serverseitig aus der CIMDATA-API, speichert sie in einer Supabase-Postgres-Datenbank und stellt sie in einer modernen Next.js-Oberfläche bereit.  
-Aktualisierungen erfolgen ausschließlich manuell über den CLI-Befehl `npm run refresh`.
+Die Web-App stellt Kursdaten bereit und liest diese read-only aus einer Supabase-Postgres-Datenbank.  
+Die Daten werden ausschließlich beim manuellen CLI-Refresh (`npm run refresh`) aus der CIMDATA Education API geholt und in die Datenbank geschrieben.
 
 ## Tech Stack
 
 - Next.js 16 (App Router) + React 19 + TypeScript
-- Prisma 7 mit Supabase Postgres
-- Serverseitiges Scraping über den CIMDATA-Education-Endpoint
-- Styling über globale CSS-Datei
+- Prisma 7 + Postgres (Supabase)
+- Datenquelle: CIMDATA Education API (paginiert via `fetch`)
+- Refresh-Pipeline: CLI (`tsx scripts/refresh.ts`)
+- Styling: globale CSS-Datei
 
 ## Architektur
 
@@ -42,7 +43,7 @@ Aktualisierungen erfolgen ausschließlich manuell über den CLI-Befehl `npm run 
   - Server Component mit Initialdaten aus der Datenbank
 
 - `src/components/CourseBrowser.tsx`
-  - Client-Komponente für Interaktion (Datumsauswahl, Nachladen gefilterter Kurse)
+  - Client-Komponente für Interaktion (Datumsauswahl, clientseitiges Filtern)
 
 - `prisma/schema.prisma`
   - Datenmodell:
@@ -54,21 +55,31 @@ Aktualisierungen erfolgen ausschließlich manuell über den CLI-Befehl `npm run 
 
 1. Manuelles Update über CLI:
    - `npm run refresh`
-2. Scraper holt alle Kursseiten aus der CIMDATA-API (paginiert).
-3. Persistenz in Supabase Postgres via Prisma (`Course` + `CourseStart`).
-4. UI lädt Daten über `GET /api/courses`.
-5. Nutzer filtert nach konkretem Startdatum; API liefert passende Kurse.
+2. Scraper holt alle Kursitems aus der CIMDATA Education API (paginiert).
+3. Persistenz in Supabase Postgres via Prisma (`Course` + `CourseStart` + `RefreshRun`-Status).
+4. Server lädt initial alle Kurse aus der Datenbank (via `getCoursesByStartDate(null)`), Client filtert danach ausschließlich lokal.
+5. Nutzer filtert nach konkretem Startdatum; es gibt keine weiteren API-Requests pro Filterwechsel.
 
 ## API
 
 ### `GET /api/courses`
 
 Liefert:
+
 - `availableStartDates`: alle konkreten Startdaten (ISO)
 - `courses`: Kursliste (optional gefiltert)
-- `latestRefresh`: letzter Refresh-Lauf
+- `latestRefresh`: letzter Refresh-Lauf (oder `null`)
+
+Wenn `latestRefresh` vorhanden ist, enthält es u. a.:
+
+- `status`: `running | success | failed`
+- `foundCourses`: Anzahl gefundener Kurse
+- `foundStarts`: Anzahl gefundener Starttermine
+- `startedAt`, `finishedAt`: Zeitstempel als ISO-Strings
+- `message`: optionaler Fehlertext
 
 Query-Parameter:
+
 - `startDate` (optional), z. B. `2026-04-15`
 
 Hinweis: Es gibt absichtlich **kein** `POST /api/refresh` mehr.
@@ -79,12 +90,13 @@ Hinweis: Es gibt absichtlich **kein** `POST /api/refresh` mehr.
 cd /Users/henrik/Dev/cimdata
 cp .env.example .env
 npm install
-npx prisma db push
+npm run db:push
 npm run refresh
 npm run dev
 ```
 
 App im Browser:
+
 - `http://localhost:3000`
 
 ## Nützliche Commands
@@ -94,6 +106,7 @@ npm run refresh   # Kursdaten von CIMDATA neu laden (CLI-only)
 npm run dev       # Entwicklungsserver starten
 npm run build     # Produktionsbuild prüfen
 npm run lint      # Linting
+npm run db:push  # Datenbankschema in Supabase synchronisieren
 ```
 
 ## Deployment (einfach) mit Supabase + Vercel
@@ -112,7 +125,7 @@ npm run lint      # Linting
    - `DATABASE_URL=...` (Pooler, meist Port `6543`)
    - `DIRECT_URL=...` (direkt, meist Port `5432`)
 2. Schema deployen:
-   - `npx prisma db push`
+   - `npm run db:push`
 3. Daten einmalig laden:
    - `npm run refresh`
 4. Lokal testen:
@@ -129,5 +142,6 @@ npm run lint      # Linting
 ### 4) Datenaktualisierung im Betrieb
 
 Da die App bewusst nur CLI-Refresh nutzt:
+
 - Lokal/CI ausführen: `npm run refresh`
 - Optional automatisieren über GitHub Actions (Cron), z. B. täglich.
