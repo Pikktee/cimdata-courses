@@ -170,6 +170,8 @@ npm run db:push  # Datenbankschema in Supabase synchronisieren
    - `CRON_SECRET` (z. B. zufällige Zeichenkette ≥ 16 Zeichen; ohne Secret schlägt der Cron mit **401** fehl)
 3. Custom Domain in Vercel zuweisen (z. B. `cimdata-kurse.henrikheil.net`) und Deploy auslösen — danach ist der in `vercel.json` definierte Cron aktiv (**nur Production**).
 
+**Wichtig:** Wenn die **Custom Domain** nach `vercel deploy --prod` **nicht** die neue Version zeigt, liegt sie meist an der **Git-Integration** (Production-Build von `main`). Änderungen dann per **`git push origin main`** ausliefern — oder im Dashboard prüfen, ob Domain und `*.vercel.app` wirklich **dasselbe** Vercel-Projekt und dieselbe **Production**-Umgebung nutzen.
+
 ### 4) Datenaktualisierung im Betrieb
 
 - **Vercel:** Täglicher Aufruf von `https://cimdata-kurse.henrikheil.net/api/internal/refresh-courses` (Pfad siehe `vercel.json`); Vercel hängt `Authorization: Bearer` automatisch an, wenn `CRON_SECRET` gesetzt ist.
