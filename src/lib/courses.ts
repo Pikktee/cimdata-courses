@@ -124,7 +124,7 @@ export async function getCoursesByStartDate(startDate?: string | null) {
     orderBy: [{ title: "asc" }]
   });
 
-  const dateRows = await db.courseStart.findMany({
+  const dateRows: Array<{ startDate: Date }> = await db.courseStart.findMany({
     distinct: ["startDate"],
     orderBy: { startDate: "asc" },
     select: { startDate: true }
