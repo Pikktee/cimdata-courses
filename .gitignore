@@ -1,0 +1,12 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+.next
+coverage
+playwright-report
+test-results
+*.log
+
+prisma/dev.db
+prisma/dev.db-journal

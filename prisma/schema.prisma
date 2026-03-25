@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Course {
+  id           Int           @id @default(autoincrement())
+  slug         String        @unique
+  title        String
+  url          String        @unique
+  category     String
+  area         String?
+  durationText String?
+  scheduleText String?
+  locationText String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  starts       CourseStart[]
+
+  @@index([title])
+}
+
+model CourseStart {
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  startDate DateTime
+  rawText   String
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, startDate])
+  @@index([startDate])
+}
+
+model RefreshRun {
+  id          Int       @id @default(autoincrement())
+  status      String
+  source      String
+  message     String?
+  foundCourses Int      @default(0)
+  foundStarts Int       @default(0)
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+}
