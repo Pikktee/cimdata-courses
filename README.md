@@ -5,14 +5,16 @@ Eine Webanwendung zur Anzeige von CIMDATA-Kursen (nur Kurse, keine Kurspakete) m
 ## Kurzbeschreibung
 
 Die Web-App stellt Kursdaten bereit und liest diese read-only aus einer Supabase-Postgres-Datenbank.  
-Die Daten werden ausschließlich beim manuellen CLI-Refresh (`npm run refresh`) aus der CIMDATA Education API geholt und in die Datenbank geschrieben.
+Die Daten werden aus der CIMDATA Education API geholt und per **CLI** (`npm run refresh`) oder optional per **[Vercel Cron](https://vercel.com/docs/cron-jobs)** (`GET /api/internal/refresh-courses` mit `CRON_SECRET`) in die Datenbank geschrieben.
+
+**Produktions-URL:** [https://cimdata-kurse.henrikheil.net](https://cimdata-kurse.henrikheil.net)
 
 ## Tech Stack
 
 - Next.js 16 (App Router) + React 19 + TypeScript
 - Prisma 7 + Postgres (Supabase)
 - Datenquelle: CIMDATA Education API (paginiert via `fetch`)
-- Refresh-Pipeline: CLI (`tsx scripts/refresh.ts`)
+- Refresh-Pipeline: CLI (`tsx scripts/refresh.ts`) oder geschützter Cron (`/api/internal/refresh-courses`)
 - Styling: globale CSS-Datei
 
 ## Architektur
@@ -39,6 +41,13 @@ Die Daten werden ausschließlich beim manuellen CLI-Refresh (`npm run refresh`) 
     - `GET /api/courses`
     - optionaler Query-Param: `startDate=YYYY-MM-DD`
 
+- `src/app/api/internal/refresh-courses/route.ts`
+  - Geschützter Refresh für Vercel Cron: `GET /api/internal/refresh-courses`
+  - Erwartet `Authorization: Bearer <CRON_SECRET>` (Vercel setzt das automatisch, wenn `CRON_SECRET` im Projekt konfiguriert ist)
+
+- `vercel.json`
+  - Cron: täglich **06:00 UTC** (`0 6 * * *`); Plan **Hobby** erlaubt nur einmal pro Tag
+
 - `src/app/page.tsx`
   - Server Component mit Initialdaten aus der Datenbank
 
@@ -53,8 +62,7 @@ Die Daten werden ausschließlich beim manuellen CLI-Refresh (`npm run refresh`) 
 
 ### Datenfluss
 
-1. Manuelles Update über CLI:
-   - `npm run refresh`
+1. Manuelles Update über CLI (`npm run refresh`) oder Produktions-Cron (`/api/internal/refresh-courses`).
 2. Scraper holt alle Kursitems aus der CIMDATA Education API (paginiert).
 3. Persistenz in Supabase Postgres via Prisma (`Course` + `CourseStart` + `RefreshRun`-Status).
 4. Server lädt initial alle Kurse aus der Datenbank (via `getCoursesByStartDate(null)`), Client filtert danach ausschließlich lokal.
@@ -83,6 +91,28 @@ Query-Parameter:
 - `startDate` (optional), z. B. `2026-04-15`
 
 Hinweis: Es gibt absichtlich **kein** `POST /api/refresh` mehr.
+
+### `GET /api/internal/refresh-courses`
+
+Nur mit gültigem **Bearer-Token** (`CRON_SECRET`):
+
+- Header: `Authorization: Bearer <CRON_SECRET>`
+
+Erfolg (`200`): JSON mit `ok`, `foundCourses`, `foundStarts`.  
+Fehler beim Refresh (`500`): `ok: false`, `error`.  
+Ohne/ falsches Secret: `401`.
+
+Lokal testen (Server läuft, `.env` enthält `CRON_SECRET`):
+
+```bash
+curl -sS -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/internal/refresh-courses"
+```
+
+Gegen Produktion (gleicher Header, angepasste Basis-URL):
+
+```bash
+curl -sS -H "Authorization: Bearer $CRON_SECRET" "https://cimdata-kurse.henrikheil.net/api/internal/refresh-courses"
+```
 
 ## Lokale Entwicklung
 
@@ -137,11 +167,32 @@ npm run db:push  # Datenbankschema in Supabase synchronisieren
 2. In Vercel `Environment Variables` setzen:
    - `DATABASE_URL`
    - `DIRECT_URL`
-3. Deploy auslösen.
+   - `CRON_SECRET` (z. B. zufällige Zeichenkette ≥ 16 Zeichen; ohne Secret schlägt der Cron mit **401** fehl)
+3. Custom Domain in Vercel zuweisen (z. B. `cimdata-kurse.henrikheil.net`) und Deploy auslösen — danach ist der in `vercel.json` definierte Cron aktiv (**nur Production**).
 
 ### 4) Datenaktualisierung im Betrieb
 
-Da die App bewusst nur CLI-Refresh nutzt:
+- **Vercel:** Täglicher Aufruf von `https://cimdata-kurse.henrikheil.net/api/internal/refresh-courses` (Pfad siehe `vercel.json`); Vercel hängt `Authorization: Bearer` automatisch an, wenn `CRON_SECRET` gesetzt ist.
+- **Manuell / CI:** `npm run refresh` oder `curl` mit Bearer-Header gegen `https://cimdata-kurse.henrikheil.net/...`.
+- **Hobby:** Cron maximal **einmal pro Tag**; häufigere Schedules werden beim Deploy abgelehnt.
 
-- Lokal/CI ausführen: `npm run refresh`
-- Optional automatisieren über GitHub Actions (Cron), z. B. täglich.
+**Deployment & Domains (wichtig):** Es können **drei verschiedene Zustände** gleichzeitig existieren:
+
+| Symptom | Typische Ursache |
+|--------|-------------------|
+| Custom Domain: Startseite/API **200**, `/api/internal/refresh-courses` **HTML-404** | Auf dieser Domain läuft noch ein **älteres Deployment** (ohne Cron-Route) und/oder eine **gecachte 404** an der Edge. Nach einem Deploy mit Cron-Route: Production neu deployen, ggf. **Data Cache** leeren. |
+| `*.vercel.app`: Startseite & `/api/courses` **500** | Auf diesem Alias läuft ein Deployment **ohne gültige `DATABASE_URL`** (oder falsches Vercel-Projekt). `DATABASE_URL` / `DIRECT_URL` in **Project → Settings → Environment Variables** für **Production** prüfen und erneut deployen. |
+| Lokal / korrektes Deployment: `/api/internal/refresh-courses` **401** + Text `Unauthorized` | Route ist erreichbar; nur das **Bearer-Token** fehlt oder ist falsch. |
+
+Der Cron-Endpunkt setzt `Cache-Control: no-store`, damit gültige Antworten nicht an der Edge hängenbleiben.
+
+**Korrekter `curl` (Produktion):**
+
+```bash
+curl -sS -i -H "Authorization: Bearer DEIN_CRON_SECRET" \
+  "https://cimdata-kurse.henrikheil.net/api/internal/refresh-courses"
+```
+
+Erwartung bei **falschem** Secret: **401** und Body `Unauthorized` (kein großes HTML). **HTML mit „404: This page could not be found“** = Route existiert auf dieser Domain noch nicht (Deploy/Cache) — nicht nur ein Secret-Problem.
+
+Der frühere Pfad `/api/cron/refresh` wird **nicht** mehr verwendet (Vercel Edge konnte dort eine **stale 404** ausliefern). Cron und manuelle Aufruf bitte nur noch über **`/api/internal/refresh-courses`**.
