@@ -67,6 +67,24 @@ h1 {
   line-height: 1.5;
 }
 
+.hero-copy-link {
+  color: var(--accent-strong);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(217, 80, 22, 0.35);
+  text-underline-offset: 0.2rem;
+}
+
+.hero-copy-link:hover {
+  text-decoration-color: rgba(217, 80, 22, 0.65);
+}
+
+.hero-copy-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .toolbar {
   display: grid;
   gap: 0.75rem;

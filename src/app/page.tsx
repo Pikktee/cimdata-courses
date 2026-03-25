@@ -13,7 +13,16 @@ export default async function HomePage() {
         <p className="eyebrow">CIMDATA KURSE</p>
         <h1>Starttermine</h1>
         <p className="hero-copy">
-          Hier findest du alle verfügbaren Kurse mit ihren konkreten Startterminen auf einen Blick.
+          Hier findest du alle verfügbaren{" "}
+          <a
+            className="hero-copy-link"
+            href="https://www.cimdata.de/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Cimdata
+          </a>
+          -Kurse mit ihren konkreten Startterminen auf einen Blick.
         </p>
       </header>
       <CourseBrowser
