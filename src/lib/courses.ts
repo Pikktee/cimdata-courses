@@ -114,11 +114,22 @@ export async function getCoursesByStartDate(startDate?: string | null) {
       }
     : {};
 
-  const courses = await db.course.findMany({
+  const courses: Array<{
+    id: number;
+    slug: string;
+    title: string;
+    url: string;
+    area: string | null;
+    durationText: string | null;
+    scheduleText: string | null;
+    locationText: string | null;
+    starts: Array<{ startDate: Date }>;
+  }> = await db.course.findMany({
     where,
     include: {
       starts: {
-        orderBy: { startDate: "asc" }
+        orderBy: { startDate: "asc" },
+        select: { startDate: true }
       }
     },
     orderBy: [{ title: "asc" }]
