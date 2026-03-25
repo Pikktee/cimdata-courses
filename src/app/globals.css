@@ -220,31 +220,64 @@ h1 {
 }
 
 .course-card ul {
-  margin: 0 0 0.85rem;
+  margin: 0 0 auto;
   padding-left: 1.05rem;
+  padding-bottom: 0.85rem;
   display: grid;
   gap: 0.32rem;
   color: var(--text-muted);
   font-size: 0.92rem;
 }
 
-.course-link {
+.course-card-footer {
   margin-top: auto;
-  display: inline-block;
-  color: #5b2a00;
-  font-weight: 700;
-  background: rgba(255, 135, 75, 0.12);
-  border: 1px solid rgba(255, 135, 75, 0.28);
-  border-radius: 999px;
-  padding: 0.38rem 0.72rem;
-  text-underline-offset: 0.22rem;
+  padding-top: 0.72rem;
+  border-top: 1px solid rgba(170, 133, 90, 0.16);
+}
+
+.course-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  max-width: 100%;
+  font-size: 0.89rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
   text-decoration: none;
-  align-self: flex-start;
+  text-underline-offset: 0.22rem;
+  transition: color 0.18s ease, gap 0.18s ease;
+}
+
+.course-link-text {
+  border-bottom: 1px solid rgba(95, 100, 120, 0.35);
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+
+.course-link-icon {
+  display: flex;
+  color: var(--accent-strong);
+  opacity: 0.82;
+  transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease;
 }
 
 .course-link:hover {
-  color: #3b1700;
-  background: rgba(255, 135, 75, 0.2);
+  color: var(--accent-strong);
+}
+
+.course-link:hover .course-link-text {
+  border-bottom-color: rgba(217, 80, 22, 0.55);
+  color: var(--accent-strong);
+}
+
+.course-link:hover .course-link-icon {
+  opacity: 1;
+  transform: translate(1px, -1px);
+  color: var(--accent);
+}
+
+.course-link:focus-visible .course-link-text {
+  border-bottom-color: transparent;
 }
 
 .list-footer {
