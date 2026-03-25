@@ -36,12 +36,25 @@ function formatDateTime(value: string | null): string {
   return new Date(value).toLocaleString("de-DE");
 }
 
+function formatRefreshStatus(status: string): string {
+  switch (status) {
+    case "success":
+      return "erfolgreich";
+    case "failed":
+      return "fehlgeschlagen";
+    case "running":
+      return "läuft";
+    default:
+      return status;
+  }
+}
+
 export function CourseBrowser({
   initial
 }: {
   initial: CoursesResponse;
 }) {
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState("all");
   const [data, setData] = useState<CoursesResponse>(initial);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +78,7 @@ export function CourseBrowser({
     async (value: string) => {
       setSelectedDate(value);
       try {
-        await loadCourses(value || undefined);
+        await loadCourses(value === "all" ? undefined : value);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unbekannter Fehler");
         setLoading(false);
@@ -80,6 +93,8 @@ export function CourseBrowser({
     return `${countDates} Starttermine, ${countCourses} angezeigte Kurse`;
   }, [data]);
 
+  const showStatusPanel = loading || Boolean(error);
+
   return (
     <>
       <section className="toolbar">
@@ -91,20 +106,23 @@ export function CourseBrowser({
         />
       </section>
 
-      <section className="status-panel" aria-live="polite">
-        <p className="status-primary">{loading ? "Lade Kursdaten..." : headlineStats}</p>
-        {data.latestRefresh && (
-          <p className="status-secondary">
-            Letzter Refresh:{" "}
-            {formatDateTime(data.latestRefresh.finishedAt ?? data.latestRefresh.startedAt)} | Status:{" "}
-            {data.latestRefresh.status} | Kurse: {data.latestRefresh.foundCourses} | Termine:{" "}
-            {data.latestRefresh.foundStarts}
-          </p>
-        )}
-        {error && <p className="status-error">{error}</p>}
-      </section>
+      {showStatusPanel && (
+        <section className="status-panel">
+          {loading && <p className="status-primary">Lade Kursdaten...</p>}
+          {error && <p className="status-error">{error}</p>}
+        </section>
+      )}
 
       <CourseList courses={data.courses} activeDate={selectedDate} />
+      <footer className="list-footer" aria-live="polite">
+        <p className="footer-line">{headlineStats}</p>
+        {data.latestRefresh && (
+          <p className="footer-line">
+            Letzter Refresh: {formatDateTime(data.latestRefresh.finishedAt ?? data.latestRefresh.startedAt)} |{" "}
+            Status: {formatRefreshStatus(data.latestRefresh.status)}
+          </p>
+        )}
+      </footer>
     </>
   );
 }

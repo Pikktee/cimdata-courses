@@ -22,20 +22,15 @@ function formatDate(isoDate: string): string {
 }
 
 export function CourseList({ courses, activeDate }: CourseListProps) {
-  if (!activeDate) {
-    return (
-      <section className="empty-state">
-        <h2>Kein Startdatum ausgewählt</h2>
-        <p>Wähle ein konkretes Startdatum aus der Liste, um passende Kurse anzuzeigen.</p>
-      </section>
-    );
-  }
-
   if (courses.length === 0) {
     return (
       <section className="empty-state">
         <h2>Keine Kurse gefunden</h2>
-        <p>Für den Termin {formatDate(activeDate)} wurden aktuell keine Kurse gefunden.</p>
+        <p>
+          {activeDate === "all"
+            ? "Aktuell wurden keine Kurse gefunden."
+            : `Für den Termin ${formatDate(activeDate)} wurden aktuell keine Kurse gefunden.`}
+        </p>
       </section>
     );
   }
@@ -49,12 +44,6 @@ export function CourseList({ courses, activeDate }: CourseListProps) {
           <ul>
             <li>
               <strong>Dauer:</strong> {course.durationText ?? "k. A."}
-            </li>
-            <li>
-              <strong>Unterricht:</strong> {course.scheduleText ?? "k. A."}
-            </li>
-            <li>
-              <strong>Ort:</strong> {course.locationText ?? "k. A."}
             </li>
             <li>
               <strong>Starttermine:</strong>{" "}

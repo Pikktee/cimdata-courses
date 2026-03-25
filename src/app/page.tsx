@@ -8,11 +8,10 @@ export default async function HomePage() {
   return (
     <main className="app-shell">
       <header className="hero">
-        <p className="eyebrow">CIMDATA Kurs-Scraper</p>
-        <h1>Kurse nach konkretem Startdatum filtern</h1>
+        <p className="eyebrow">CIMDATA KURSE</p>
+        <h1>Starttermine</h1>
         <p className="hero-copy">
-          Diese Ansicht zeigt ausschließlich Kurse (keine Kurspakete) und erlaubt die Filterung
-          nach exakten Startterminen.
+          Hier findest du alle verfügbaren Kurse mit ihren konkreten Startterminen auf einen Blick.
         </p>
       </header>
       <CourseBrowser

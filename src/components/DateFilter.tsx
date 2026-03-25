@@ -14,7 +14,7 @@ function formatDate(isoDate: string): string {
 export function DateFilter({ options, value, onChange, disabled = false }: DateFilterProps) {
   return (
     <label className="control-card" htmlFor="startdate">
-      <span className="control-label">Startdatum filtern</span>
+      <span className="control-label">Startdatum</span>
       <select
         id="startdate"
         className="select-input"
@@ -22,7 +22,7 @@ export function DateFilter({ options, value, onChange, disabled = false }: DateF
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
       >
-        <option value="">Bitte Startdatum wählen</option>
+        <option value="all">Alle</option>
         {options.map((date) => (
           <option key={date} value={date}>
             {formatDate(date)}
