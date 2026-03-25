@@ -112,12 +112,17 @@ h1 {
 }
 
 .select-input {
-  background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 0.64rem;
   font-size: 0.96rem;
-  padding: 0.58rem 0.66rem;
+  padding: 0.58rem 2.35rem 0.58rem 0.72rem;
+  appearance: none;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6478' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.72rem center;
+  background-size: 1rem 1rem;
 }
 
 .select-input:focus-visible,
@@ -286,7 +291,7 @@ h1 {
   margin-top: 0.2rem;
   color: var(--text-muted);
   font-size: 0.79rem;
-  text-align: right;
+  text-align: left;
   display: grid;
   gap: 0.26rem;
 }
@@ -303,10 +308,6 @@ h1 {
 
   .course-grid {
     grid-template-columns: 1fr;
-  }
-
-  .list-footer {
-    text-align: left;
   }
 }
 

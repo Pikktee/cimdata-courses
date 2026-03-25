@@ -13,7 +13,7 @@ const displayFont = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "CIMDATA Kurs-Scraper",
+  title: "CIMDATA Kursübersicht",
   description: "Kursübersicht nach konkreten Startterminen"
 };
 
