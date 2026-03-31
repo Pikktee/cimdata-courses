@@ -624,13 +624,84 @@ h1 {
 
 .list-footer {
   border-top: 1px solid var(--border);
-  padding-top: 0.55rem;
-  margin-top: 0.2rem;
+  padding-top: 0.7rem;
+  margin-top: 0.35rem;
   color: var(--text-muted);
   font-size: 0.79rem;
   text-align: left;
   display: grid;
-  gap: 0.26rem;
+  gap: 0.42rem;
+}
+
+.refresh-summary-card {
+  display: grid;
+  gap: 0.44rem;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid rgba(170, 133, 90, 0.2);
+  border-radius: 0.8rem;
+  background: linear-gradient(180deg, #fffdfa, #fff7ee);
+}
+
+.refresh-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.refresh-summary-title {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 760;
+  color: #8a5f35;
+}
+
+.refresh-status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.52rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.refresh-status-badge-success {
+  color: #0f7a49;
+  background: #ebf9f2;
+  border-color: rgba(15, 122, 73, 0.25);
+}
+
+.refresh-status-badge-error {
+  color: #b12b4b;
+  background: #fff1f3;
+  border-color: rgba(177, 43, 75, 0.24);
+}
+
+.refresh-status-badge-running {
+  color: #7f5200;
+  background: #fff2d8;
+  border-color: rgba(191, 127, 0, 0.32);
+}
+
+.refresh-status-badge-neutral {
+  color: #5f6478;
+  background: #f4f6fb;
+  border-color: rgba(95, 100, 120, 0.22);
+}
+
+.refresh-summary-hint {
+  margin: 0;
+  color: #5f4d36;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.refresh-summary-grid {
+  display: grid;
+  gap: 0.16rem;
 }
 
 .footer-line {

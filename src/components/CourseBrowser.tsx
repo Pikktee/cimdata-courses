@@ -55,6 +55,19 @@ function formatRefreshStatus(status: string): string {
   }
 }
 
+function getRefreshStatusTone(status: string): "success" | "error" | "running" | "neutral" {
+  switch (status) {
+    case "success":
+      return "success";
+    case "failed":
+      return "error";
+    case "running":
+      return "running";
+    default:
+      return "neutral";
+  }
+}
+
 export function CourseBrowser({
   initial
 }: {
@@ -231,6 +244,18 @@ export function CourseBrowser({
     return map;
   }, [initial.courses]);
 
+  const latestRefresh = initial.latestRefresh;
+  const latestSuccessfulRefreshTime = initial.latestSuccessfulRefresh
+    ? formatDateTime(initial.latestSuccessfulRefresh.finishedAt ?? initial.latestSuccessfulRefresh.startedAt)
+    : "Noch kein erfolgreicher Refresh";
+  const latestAttemptTime = latestRefresh
+    ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
+    : "Noch kein Refresh gestartet";
+  const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
+  const latestStatusText = latestRefresh
+    ? formatRefreshStatus(latestRefresh.status)
+    : "unbekannt";
+
   return (
     <>
       <section className="toolbar">
@@ -350,36 +375,35 @@ export function CourseBrowser({
         </aside>
       </section>
       <footer className="list-footer" aria-live="polite">
-        {initial.latestRefresh && (
-          <>
+        <section className="refresh-summary-card" aria-label="Refresh-Status">
+          <div className="refresh-summary-head">
+            <p className="refresh-summary-title">Synchronisation</p>
+            <span className={`refresh-status-badge refresh-status-badge-${latestStatusTone}`}>
+              {latestStatusText}
+            </span>
+          </div>
+          <p className="refresh-summary-hint">
+            {latestRefresh?.status === "failed"
+              ? "Der letzte Versuch ist fehlgeschlagen. Die zuletzt erfolgreichen Daten bleiben aktiv."
+              : latestRefresh?.status === "running"
+                ? "Ein Refresh läuft gerade. Die Ansicht aktualisiert sich nach Abschluss."
+                : "Kursdaten konnten zuletzt erfolgreich synchronisiert werden."}
+          </p>
+          <div className="refresh-summary-grid">
             <p className="footer-line">
-              Letzter Refresh:{" "}
-              {formatDateTime(
-                initial.latestRefresh.finishedAt ?? initial.latestRefresh.startedAt
-              )}{" "}
-              | Status: {formatRefreshStatus(initial.latestRefresh.status)}
+              <strong>Zuletzt erfolgreich:</strong> {latestSuccessfulRefreshTime}
             </p>
-            {initial.latestRefresh.status === "failed" && (
-              <>
-                {initial.latestRefresh.message && (
-                      <details className="refresh-error-details" open>
-                        <summary className="status-error">Refresh-Fehlerdetails anzeigen</summary>
-                        <pre className="refresh-error-pre">{initial.latestRefresh.message}</pre>
-                      </details>
-                )}
-                {initial.latestSuccessfulRefresh && (
-                  <p className="footer-line">
-                    Letzter erfolgreicher Refresh:{" "}
-                    {formatDateTime(
-                      initial.latestSuccessfulRefresh.finishedAt ??
-                        initial.latestSuccessfulRefresh.startedAt
-                    )}
-                  </p>
-                )}
-              </>
-            )}
-          </>
-        )}
+            <p className="footer-line">
+              <strong>Letzter Versuch:</strong> {latestAttemptTime}
+            </p>
+          </div>
+          {latestRefresh?.status === "failed" && latestRefresh.message && (
+            <details className="refresh-error-details" open>
+              <summary className="status-error">Fehlerdetails</summary>
+              <pre className="refresh-error-pre">{latestRefresh.message}</pre>
+            </details>
+          )}
+        </section>
         <p className="footer-line footer-legal">
           <Link href="/impressum" className="footer-impressum-link">
             Impressum &amp; Datenschutz
