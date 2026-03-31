@@ -274,25 +274,12 @@ export function CourseBrowser({
           activeDate={selectedDate}
           selectedByDate={selectedCoursesByDate}
           onAssignCourse={handleAssignCourse}
-          onRemoveCourse={handleRemoveCourse}
         />
 
         <aside className="plan-panel" aria-live="polite">
           <div className="plan-panel-head">
             <p className="plan-panel-eyebrow">Mein Studienplan</p>
-            <h2>Lokal im Browser</h2>
-            <button
-              type="button"
-              className="manual-refresh-btn"
-              onClick={handleManualRefresh}
-              disabled={isRefreshingNow}
-            >
-              {isRefreshingNow ? "Refresh läuft..." : "Refresh jetzt starten"}
-            </button>
-            <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
-              Studienplan zurücksetzen
-            </button>
-            {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
+            <h2>Lokale Planung</h2>
           </div>
 
           {plannedEntries.length === 0 ? (
@@ -370,6 +357,10 @@ export function CourseBrowser({
                   </li>
                 ))}
               </ul>
+
+              <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
+                Studienplan zurücksetzen
+              </button>
             </>
           )}
         </aside>
@@ -396,6 +387,17 @@ export function CourseBrowser({
             <p className="footer-line">
               <strong>Letzter Versuch:</strong> {latestAttemptTime}
             </p>
+          </div>
+          <div className="refresh-summary-actions">
+            <button
+              type="button"
+              className="manual-refresh-btn"
+              onClick={handleManualRefresh}
+              disabled={isRefreshingNow}
+            >
+              {isRefreshingNow ? "Refresh läuft..." : "Refresh jetzt starten"}
+            </button>
+            {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
           </div>
           {latestRefresh?.status === "failed" && latestRefresh.message && (
             <details className="refresh-error-details" open>

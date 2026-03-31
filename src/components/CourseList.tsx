@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+
 type CourseItem = {
   id: number;
   slug: string;
@@ -15,7 +17,6 @@ type CourseListProps = {
   activeDate: string;
   selectedByDate: Record<string, number>;
   onAssignCourse: (courseId: number, startDate: string) => void;
-  onRemoveCourse: (startDate: string) => void;
 };
 
 function formatDate(isoDate: string): string {
@@ -28,9 +29,26 @@ export function CourseList({
   courses,
   activeDate,
   selectedByDate,
-  onAssignCourse,
-  onRemoveCourse
+  onAssignCourse
 }: CourseListProps) {
+  const [plannedDateByCourse, setPlannedDateByCourse] = useState<Record<number, string>>({});
+
+  const sortedCourses = useMemo(
+    () =>
+      courses.map((course) => ({
+        ...course,
+        startDates: course.startDates.slice().sort((a, b) => a.localeCompare(b))
+      })),
+    [courses]
+  );
+
+  const getSelectedDate = (course: CourseItem): string => {
+    const preferred = plannedDateByCourse[course.id];
+    if (preferred && course.startDates.includes(preferred)) return preferred;
+    if (activeDate !== "all" && course.startDates.includes(activeDate)) return activeDate;
+    return course.startDates[0] ?? "";
+  };
+
   if (courses.length === 0) {
     return (
       <section className="empty-state">
@@ -46,7 +64,18 @@ export function CourseList({
 
   return (
     <section className="course-grid" aria-live="polite">
-      {courses.map((course) => (
+      {sortedCourses.map((course) => {
+        const selectedStartDate = getSelectedDate(course);
+        const assignedCourseId = selectedByDate[selectedStartDate];
+        const isAssigned = assignedCourseId === course.id;
+        const isReplacing = typeof assignedCourseId === "number" && assignedCourseId !== course.id;
+        const actionLabel = isAssigned
+          ? "Bereits im Studienplan"
+          : isReplacing
+            ? "Für Termin ersetzen"
+            : "In Studienplan aufnehmen";
+
+        return (
         <article className="course-card" key={course.id}>
           <h3>{course.title}</h3>
           <p className="course-meta">{course.area ?? "Bereich nicht angegeben"}</p>
@@ -58,41 +87,49 @@ export function CourseList({
               <strong>Starttermine:</strong> {course.startDates.length || "k. A."}
             </li>
           </ul>
-          <div className="course-date-actions">
-            {course.startDates.slice().sort().map((startDate) => {
-              const selectedCourseId = selectedByDate[startDate];
-              const isSelected = selectedCourseId === course.id;
-              const isReplacing =
-                typeof selectedCourseId === "number" && selectedCourseId !== course.id;
-              const buttonLabel = isSelected
-                ? "Entfernen"
-                : isReplacing
-                  ? "Ersetzen"
-                  : "Hinzufügen";
-
-              return (
-                <div className="course-date-row" key={`${course.id}-${startDate}`}>
-                  <span className="course-date-chip">{formatDate(startDate)}</span>
-                  <button
-                    type="button"
-                    className={`course-action-btn ${
-                      isSelected
-                        ? "course-action-btn-remove"
-                        : isReplacing
-                          ? "course-action-btn-replace"
-                          : "course-action-btn-add"
-                    }`}
-                    onClick={() =>
-                      isSelected
-                        ? onRemoveCourse(startDate)
-                        : onAssignCourse(course.id, startDate)
-                    }
-                  >
-                    {buttonLabel}
-                  </button>
-                </div>
-              );
-            })}
+          <div className="course-plan-controls">
+            <label htmlFor={`startdate-${course.id}`} className="course-plan-label">
+              Termin für Studienplan
+            </label>
+            <div className="course-plan-row">
+              <select
+                id={`startdate-${course.id}`}
+                className="course-plan-select"
+                value={selectedStartDate}
+                onChange={(event) =>
+                  setPlannedDateByCourse((current) => ({
+                    ...current,
+                    [course.id]: event.target.value
+                  }))
+                }
+              >
+                {course.startDates.map((startDate) => (
+                  <option key={`${course.id}-${startDate}`} value={startDate}>
+                    {formatDate(startDate)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className={`course-plan-primary-btn ${
+                  isReplacing ? "course-plan-primary-btn-replace" : ""
+                }`}
+                disabled={isAssigned || !selectedStartDate}
+                onClick={() => onAssignCourse(course.id, selectedStartDate)}
+              >
+                {actionLabel}
+              </button>
+            </div>
+            {isAssigned && (
+              <p className="course-plan-note">
+                Dieser Kurs ist für den ausgewählten Termin bereits im Studienplan.
+              </p>
+            )}
+            {isReplacing && (
+              <p className="course-plan-note course-plan-note-warning">
+                Für diesen Termin ist bereits ein anderer Kurs geplant und wird ersetzt.
+              </p>
+            )}
           </div>
           <div className="course-card-footer">
             <a className="course-link" href={course.url} target="_blank" rel="noreferrer">
@@ -107,7 +144,8 @@ export function CourseList({
             </a>
           </div>
         </article>
-      ))}
+        );
+      })}
     </section>
   );
 }
