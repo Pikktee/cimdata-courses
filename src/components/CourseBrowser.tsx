@@ -245,9 +245,6 @@ export function CourseBrowser({
   }, [initial.courses]);
 
   const latestRefresh = initial.latestRefresh;
-  const latestSuccessfulRefreshTime = initial.latestSuccessfulRefresh
-    ? formatDateTime(initial.latestSuccessfulRefresh.finishedAt ?? initial.latestSuccessfulRefresh.startedAt)
-    : "Noch kein erfolgreicher Refresh";
   const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
   const latestStatusText = latestRefresh
     ? formatRefreshStatus(latestRefresh.status)
@@ -256,13 +253,13 @@ export function CourseBrowser({
     latestRefresh?.status === "running"
       ? "Läuft seit"
       : latestRefresh?.status === "failed"
-        ? "Zuletzt erfolgreich"
+        ? "Letzter Versuch"
         : "Zuletzt synchronisiert";
   const refreshTimestampValue =
     latestRefresh?.status === "running"
       ? formatDateTime(latestRefresh.startedAt)
       : latestRefresh?.status === "failed"
-        ? latestSuccessfulRefreshTime
+        ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
         : latestRefresh
           ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
           : "Noch kein Refresh gestartet";
@@ -386,7 +383,7 @@ export function CourseBrowser({
           </div>
           <p className="refresh-summary-hint">
             {latestRefresh?.status === "failed"
-              ? "Der letzte Versuch ist fehlgeschlagen. Die zuletzt erfolgreichen Daten bleiben aktiv."
+              ? "Der Refresh ist fehlgeschlagen. Der sichtbare Datenstand bleibt unverändert."
               : latestRefresh?.status === "running"
                 ? "Ein Refresh läuft gerade. Die Ansicht aktualisiert sich nach Abschluss."
                 : "Kursdaten konnten zuletzt erfolgreich synchronisiert werden."}
