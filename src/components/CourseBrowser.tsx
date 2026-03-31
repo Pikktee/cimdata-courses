@@ -248,13 +248,24 @@ export function CourseBrowser({
   const latestSuccessfulRefreshTime = initial.latestSuccessfulRefresh
     ? formatDateTime(initial.latestSuccessfulRefresh.finishedAt ?? initial.latestSuccessfulRefresh.startedAt)
     : "Noch kein erfolgreicher Refresh";
-  const latestAttemptTime = latestRefresh
-    ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
-    : "Noch kein Refresh gestartet";
   const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
   const latestStatusText = latestRefresh
     ? formatRefreshStatus(latestRefresh.status)
     : "unbekannt";
+  const refreshTimestampLabel =
+    latestRefresh?.status === "running"
+      ? "Läuft seit"
+      : latestRefresh?.status === "failed"
+        ? "Zuletzt erfolgreich"
+        : "Zuletzt synchronisiert";
+  const refreshTimestampValue =
+    latestRefresh?.status === "running"
+      ? formatDateTime(latestRefresh.startedAt)
+      : latestRefresh?.status === "failed"
+        ? latestSuccessfulRefreshTime
+        : latestRefresh
+          ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
+          : "Noch kein Refresh gestartet";
 
   return (
     <>
@@ -368,7 +379,7 @@ export function CourseBrowser({
       <footer className="list-footer" aria-live="polite">
         <section className="refresh-summary-card" aria-label="Refresh-Status">
           <div className="refresh-summary-head">
-            <p className="refresh-summary-title">Synchronisation</p>
+            <p className="refresh-summary-title">Daten-Synchronisation</p>
             <span className={`refresh-status-badge refresh-status-badge-${latestStatusTone}`}>
               {latestStatusText}
             </span>
@@ -380,14 +391,10 @@ export function CourseBrowser({
                 ? "Ein Refresh läuft gerade. Die Ansicht aktualisiert sich nach Abschluss."
                 : "Kursdaten konnten zuletzt erfolgreich synchronisiert werden."}
           </p>
-          <div className="refresh-summary-grid">
-            <p className="footer-line">
-              <strong>Zuletzt erfolgreich:</strong> {latestSuccessfulRefreshTime}
-            </p>
-            <p className="footer-line">
-              <strong>Letzter Versuch:</strong> {latestAttemptTime}
-            </p>
-          </div>
+          <p className="refresh-summary-time">
+            <span className="refresh-summary-time-label">{refreshTimestampLabel}</span>
+            <strong>{refreshTimestampValue}</strong>
+          </p>
           <div className="refresh-summary-actions">
             <button
               type="button"
@@ -401,7 +408,13 @@ export function CourseBrowser({
           </div>
           {latestRefresh?.status === "failed" && latestRefresh.message && (
             <details className="refresh-error-details" open>
-              <summary className="status-error">Fehlerdetails</summary>
+              <summary className="status-error">
+                Fehlerdetails
+                <span className="refresh-error-time-inline">
+                  {" "}
+                  ({formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)})
+                </span>
+              </summary>
               <pre className="refresh-error-pre">{latestRefresh.message}</pre>
             </details>
           )}
