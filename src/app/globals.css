@@ -253,7 +253,7 @@ h1 {
 
 .planner-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: 1fr;
   align-items: start;
   gap: 1rem;
 }
@@ -315,21 +315,31 @@ h1 {
 }
 
 .course-plan-row {
-  display: grid;
-  gap: 0.42rem;
+  display: block;
 }
 
-.course-plan-select {
-  width: 100%;
-  border: 1px solid rgba(170, 133, 90, 0.34);
-  border-radius: 0.56rem;
-  padding: 0.4rem 0.48rem;
-  font-size: 0.84rem;
-  color: var(--text);
-  background: #fff;
+.course-plan-tooltip-wrap {
+  position: relative;
+}
+
+.course-plan-tooltip-wrap.has-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.35rem);
+  width: min(280px, 92vw);
+  background: #2c3141;
+  color: #fff;
+  border-radius: 0.52rem;
+  padding: 0.42rem 0.52rem;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  box-shadow: 0 10px 22px rgba(22, 25, 36, 0.25);
+  z-index: 2;
 }
 
 .course-plan-primary-btn {
+  width: 100%;
   border: 1px solid rgba(217, 80, 22, 0.32);
   background: #fff0e7;
   color: #8f3c13;
@@ -347,8 +357,10 @@ h1 {
 }
 
 .course-plan-primary-btn:disabled {
-  opacity: 0.68;
-  cursor: default;
+  border-color: rgba(95, 100, 120, 0.24);
+  background: #f4f6fb;
+  color: #7d8295;
+  cursor: not-allowed;
 }
 
 .course-plan-note {
@@ -552,6 +564,12 @@ h1 {
   list-style: none;
   display: grid;
   gap: 0.45rem;
+}
+
+@media (min-width: 960px) {
+  .plan-course-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .plan-course-item {
@@ -908,10 +926,6 @@ h1 {
   }
 
   .planner-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .course-plan-row {
     grid-template-columns: 1fr;
   }
 

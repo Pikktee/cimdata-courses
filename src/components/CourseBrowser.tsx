@@ -165,7 +165,18 @@ export function CourseBrowser({
     return gaps;
   }, [plannedEntries]);
 
-  const handleAssignCourse = useCallback((courseId: number, startDate: string) => {
+  const handleAssignCourse = useCallback(
+    (courseId: number) => {
+      if (selectedDate === "all") return;
+      setSelectedCoursesByDate((current) => ({
+        ...current,
+        [selectedDate]: courseId
+      }));
+    },
+    [selectedDate]
+  );
+
+  const handleAssignCourseForDate = useCallback((courseId: number, startDate: string) => {
     setSelectedCoursesByDate((current) => ({
       ...current,
       [startDate]: courseId
@@ -345,7 +356,7 @@ export function CourseBrowser({
                         className="plan-swap-select"
                         value={entry.course.id}
                         onChange={(event) =>
-                          handleAssignCourse(Number(event.target.value), entry.startDate)
+                          handleAssignCourseForDate(Number(event.target.value), entry.startDate)
                         }
                       >
                         {(courseOptionsByStartDate.get(entry.startDate) ?? []).map((option) => (
