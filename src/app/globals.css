@@ -104,6 +104,19 @@ h1 {
   margin-bottom: 0.15rem;
 }
 
+.favorites-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  color: #5f4d36;
+  font-weight: 650;
+}
+
+.favorites-filter input {
+  accent-color: var(--accent-strong);
+}
+
 .control-card {
   display: grid;
   gap: 0.55rem;
@@ -198,6 +211,33 @@ h1 {
   font-size: 0.9rem;
 }
 
+.refresh-error-details {
+  margin-top: 0.3rem;
+  border: 1px solid rgba(215, 58, 87, 0.25);
+  border-radius: 0.72rem;
+  background: #fff4f6;
+  padding: 0.45rem 0.65rem 0.6rem;
+}
+
+.refresh-error-details summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.refresh-error-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.refresh-error-pre {
+  margin: 0.45rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-body), "Trebuchet MS", sans-serif;
+  color: #7d1d34;
+  font-size: 0.81rem;
+  line-height: 1.45;
+}
+
 .empty-state {
   text-align: center;
   background: var(--surface);
@@ -224,6 +264,13 @@ h1 {
   gap: 1rem;
 }
 
+.planner-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 1rem;
+}
+
 .course-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -247,6 +294,40 @@ h1 {
   line-height: 1.3;
 }
 
+.course-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.course-card-head h3 {
+  margin: 0;
+}
+
+.favorite-btn {
+  border: 1px solid rgba(170, 133, 90, 0.35);
+  background: #fff9f0;
+  color: #7d6043;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.26rem 0.58rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.favorite-btn:hover {
+  background: #fff0dc;
+}
+
+.favorite-btn-active {
+  color: #7d3711;
+  border-color: rgba(217, 80, 22, 0.32);
+  background: #ffe9d9;
+}
+
 .course-meta {
   margin: 0 0 0.65rem;
   color: var(--accent-strong);
@@ -257,11 +338,75 @@ h1 {
 .course-card ul {
   margin: 0 0 auto;
   padding-left: 1.05rem;
-  padding-bottom: 0.85rem;
+  padding-bottom: 0.6rem;
   display: grid;
   gap: 0.32rem;
   color: var(--text-muted);
   font-size: 0.92rem;
+}
+
+.course-date-actions {
+  margin-bottom: 0.65rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.course-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.course-date-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.82rem;
+  padding: 0.22rem 0.56rem;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 55, 17, 0.25);
+  background: rgba(255, 122, 64, 0.09);
+  color: #7d3711;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.course-action-btn {
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  padding: 0.35rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.course-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.course-action-btn:focus-visible,
+.plan-remove-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.course-action-btn-add {
+  background: #fef6ef;
+  border-color: rgba(217, 80, 22, 0.3);
+  color: #8f3c13;
+}
+
+.course-action-btn-replace {
+  background: #fff2d8;
+  border-color: rgba(191, 127, 0, 0.45);
+  color: #7f5200;
+}
+
+.course-action-btn-remove {
+  background: #fff1f3;
+  border-color: rgba(215, 58, 87, 0.28);
+  color: #b12b4b;
 }
 
 .course-card-footer {
@@ -313,6 +458,216 @@ h1 {
 
 .course-link:focus-visible .course-link-text {
   border-bottom-color: transparent;
+}
+
+.plan-panel {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  background: linear-gradient(180deg, #fffefc, #fff6ea);
+  border: 1px solid rgba(170, 133, 90, 0.35);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 12px 26px rgba(101, 70, 26, 0.12);
+}
+
+.plan-panel-head {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.plan-panel-eyebrow {
+  margin: 0;
+  color: #8f3c13;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.plan-panel h2 {
+  margin: 0;
+  font-size: 1.17rem;
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.manual-refresh-btn {
+  justify-self: start;
+  margin-top: 0.2rem;
+  border: 1px solid rgba(217, 80, 22, 0.35);
+  background: #fff0e7;
+  color: #7d3711;
+  border-radius: 0.62rem;
+  font-size: 0.82rem;
+  font-weight: 750;
+  padding: 0.44rem 0.72rem;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.manual-refresh-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #ffe8d9;
+}
+
+.plan-clear-btn {
+  justify-self: start;
+  border: 1px solid rgba(95, 100, 120, 0.26);
+  background: rgba(255, 255, 255, 0.72);
+  color: #5f6478;
+  border-radius: 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 690;
+  padding: 0.38rem 0.68rem;
+  cursor: pointer;
+}
+
+.plan-clear-btn:hover {
+  background: #ffffff;
+}
+
+.manual-refresh-btn:disabled {
+  opacity: 0.74;
+  cursor: progress;
+}
+
+.manual-refresh-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.manual-refresh-notice {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  color: #5f4d36;
+  line-height: 1.45;
+}
+
+.plan-empty {
+  margin: 0;
+  padding: 0.82rem 0.82rem 0.88rem;
+  border-radius: 0.75rem;
+  border: 1px dashed rgba(170, 133, 90, 0.4);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--text-muted);
+  font-size: 0.89rem;
+  line-height: 1.5;
+}
+
+.plan-stats {
+  display: grid;
+  gap: 0.34rem;
+  padding: 0.72rem 0.8rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(170, 133, 90, 0.24);
+}
+
+.plan-stats p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #5f4d36;
+  line-height: 1.45;
+}
+
+.plan-gap-hint {
+  color: #b56b00 !important;
+  font-weight: 700;
+}
+
+.plan-gap-ok {
+  color: #0f7a49 !important;
+  font-weight: 700;
+}
+
+.plan-gap-list {
+  margin: -0.35rem 0 0;
+  padding: 0.7rem 0.92rem 0.72rem 1.45rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(191, 127, 0, 0.24);
+  background: rgba(255, 242, 216, 0.56);
+  color: #6f4c13;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.plan-course-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.plan-course-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border-radius: 0.78rem;
+  border: 1px solid rgba(170, 133, 90, 0.24);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.62rem 0.66rem 0.65rem;
+}
+
+.plan-course-date {
+  margin: 0;
+  color: #8f3c13;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.plan-course-title {
+  margin: 0.14rem 0 0;
+  font-size: 0.87rem;
+  color: var(--text);
+  line-height: 1.36;
+}
+
+.plan-swap-label {
+  display: block;
+  margin-top: 0.36rem;
+  margin-bottom: 0.22rem;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #6a4f34;
+}
+
+.plan-swap-select {
+  width: 100%;
+  border: 1px solid rgba(170, 133, 90, 0.32);
+  border-radius: 0.55rem;
+  padding: 0.34rem 0.5rem;
+  font-size: 0.79rem;
+  color: var(--text);
+  background: #fff;
+}
+
+.plan-swap-select:focus-visible,
+.favorite-btn:focus-visible,
+.plan-clear-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.plan-remove-btn {
+  border: 1px solid rgba(215, 58, 87, 0.28);
+  background: #fff1f3;
+  color: #b12b4b;
+  border-radius: 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.34rem 0.55rem;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.plan-remove-btn:hover {
+  transform: translateY(-1px);
+  background: #ffe8ec;
 }
 
 .list-footer {
@@ -469,6 +824,19 @@ h1 {
 @media (max-width: 700px) {
   .toolbar {
     display: block;
+  }
+
+  .planner-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-panel {
+    position: static;
+    order: -1;
+  }
+
+  .course-date-row {
+    align-items: stretch;
   }
 
   .course-grid {

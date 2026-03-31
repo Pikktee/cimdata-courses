@@ -5,7 +5,47 @@ function dateFromIso(isoDate: string): Date {
   return new Date(`${isoDate}T00:00:00.000Z`);
 }
 
+function formatRefreshError(error: unknown): string {
+  if (error instanceof Error) {
+    const details = [
+      `Typ: ${error.name || "Error"}`,
+      `Nachricht: ${error.message}`
+    ];
+
+    if (error.cause) {
+      details.push(
+        `Ursache: ${error.cause instanceof Error ? error.cause.message : String(error.cause)}`
+      );
+    }
+
+    if (error.stack) {
+      details.push(`Stack:\n${error.stack}`);
+    }
+
+    return details.join("\n\n");
+  }
+
+  return `Unbekannter Fehlertyp: ${String(error)}`;
+}
+
 export async function refreshCoursesFromSource() {
+  const runningRefresh = await db.refreshRun.findFirst({
+    where: { status: "running" },
+    orderBy: [{ startedAt: "asc" }, { id: "asc" }]
+  });
+
+  if (runningRefresh) {
+    return {
+      success: false as const,
+      reason: "already-running" as const,
+      message: [
+        "Doppel-Refresh verhindert: Es läuft bereits ein Refresh.",
+        `Lauf-ID: ${runningRefresh.id}`,
+        `Gestartet: ${runningRefresh.startedAt.toLocaleString("de-DE")}`
+      ].join("\n")
+    };
+  }
+
   const refreshRun = await db.refreshRun.create({
     data: {
       status: "running",
@@ -14,6 +54,36 @@ export async function refreshCoursesFromSource() {
   });
 
   try {
+    const firstRunningRefresh = await db.refreshRun.findFirst({
+      where: { status: "running" },
+      orderBy: [{ startedAt: "asc" }, { id: "asc" }]
+    });
+
+    if (!firstRunningRefresh || firstRunningRefresh.id !== refreshRun.id) {
+      const message = [
+        "Doppel-Refresh verhindert: Ein anderer Lauf hat den Vorrang.",
+        `Aktueller Lauf: ${refreshRun.id}`,
+        firstRunningRefresh
+          ? `Aktiver Lauf: ${firstRunningRefresh.id} (seit ${firstRunningRefresh.startedAt.toLocaleString("de-DE")})`
+          : "Aktiver Lauf konnte nicht eindeutig bestimmt werden."
+      ].join("\n");
+
+      await db.refreshRun.update({
+        where: { id: refreshRun.id },
+        data: {
+          status: "failed",
+          message,
+          finishedAt: new Date()
+        }
+      });
+
+      return {
+        success: false as const,
+        reason: "already-running" as const,
+        message
+      };
+    }
+
     const { courses, source } = await scrapeCimdataCourses();
     const scrapedSlugs = new Set<string>();
     let foundStarts = 0;
@@ -85,7 +155,11 @@ export async function refreshCoursesFromSource() {
       foundStarts
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unbekannter Fehler";
+    const message = [
+      `Refresh fehlgeschlagen am ${new Date().toLocaleString("de-DE")}.`,
+      formatRefreshError(error),
+      "Hinweis: Bitte prüfe Erreichbarkeit der CIMDATA API, gültige DB-Verbindung und Server-Logs."
+    ].join("\n\n");
 
     await db.refreshRun.update({
       where: { id: refreshRun.id },
@@ -98,6 +172,7 @@ export async function refreshCoursesFromSource() {
 
     return {
       success: false as const,
+      reason: "failed" as const,
       message
     };
   }
@@ -159,6 +234,13 @@ export async function getCoursesByStartDate(startDate?: string | null) {
 
 export async function getLatestRefreshRun() {
   return db.refreshRun.findFirst({
+    orderBy: { startedAt: "desc" }
+  });
+}
+
+export async function getLatestSuccessfulRefreshRun() {
+  return db.refreshRun.findFirst({
+    where: { status: "success" },
     orderBy: { startedAt: "desc" }
   });
 }

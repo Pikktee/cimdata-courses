@@ -53,14 +53,29 @@ async function fetchAllCourseItems(): Promise<EducationCourseApiItem[]> {
 
   while (true) {
     const url = `https://api-gateway.cimdata.de/api/v1/education/courses/1?pageNumber=${pageNumber}&pageSize=${pageSize}&sortBy=1&package=false&ascending=true`;
-    const res = await fetch(url, {
-      headers: {
-        "accept": "application/json"
-      }
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: {
+          "accept": "application/json"
+        }
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `CIMDATA API Netzwerkfehler auf Seite ${pageNumber} (${url}). Ursache: ${message}`
+      );
+    }
 
     if (!res.ok) {
-      throw new Error(`CIMDATA API Fehler: ${res.status} beim Abruf von Seite ${pageNumber}`);
+      const bodySnippet = (await res.text()).slice(0, 1200);
+      throw new Error(
+        [
+          `CIMDATA API Fehler: HTTP ${res.status} beim Abruf von Seite ${pageNumber}.`,
+          `URL: ${url}`,
+          bodySnippet ? `Antwortauszug: ${bodySnippet}` : "Antwortauszug: <leer>"
+        ].join("\n")
+      );
     }
 
     const json = (await res.json()) as EducationCoursesApiResponse;

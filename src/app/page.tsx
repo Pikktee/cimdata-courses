@@ -1,11 +1,18 @@
 import { CourseBrowser } from "@/components/CourseBrowser";
-import { getCoursesByStartDate, getLatestRefreshRun } from "@/lib/courses";
+import {
+  getCoursesByStartDate,
+  getLatestRefreshRun,
+  getLatestSuccessfulRefreshRun
+} from "@/lib/courses";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const initialData = await getCoursesByStartDate(null);
-  const latestRefresh = await getLatestRefreshRun();
+  const [latestRefresh, latestSuccessfulRefresh] = await Promise.all([
+    getLatestRefreshRun(),
+    getLatestSuccessfulRefreshRun()
+  ]);
 
   return (
     <main className="app-shell">
@@ -38,6 +45,16 @@ export default async function HomePage() {
                 startedAt: latestRefresh.startedAt.toISOString(),
                 finishedAt: latestRefresh.finishedAt?.toISOString() ?? null,
                 message: latestRefresh.message ?? null
+              }
+            : null,
+          latestSuccessfulRefresh: latestSuccessfulRefresh
+            ? {
+                status: latestSuccessfulRefresh.status,
+                foundCourses: latestSuccessfulRefresh.foundCourses,
+                foundStarts: latestSuccessfulRefresh.foundStarts,
+                startedAt: latestSuccessfulRefresh.startedAt.toISOString(),
+                finishedAt: latestSuccessfulRefresh.finishedAt?.toISOString() ?? null,
+                message: latestSuccessfulRefresh.message ?? null
               }
             : null
         }}

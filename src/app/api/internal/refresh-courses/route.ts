@@ -26,9 +26,10 @@ export async function GET(request: NextRequest) {
   try {
     const result = await refreshCoursesFromSource();
     if (!result.success) {
+      const statusCode = result.reason === "already-running" ? 409 : 500;
       return NextResponse.json(
-        { ok: false, error: result.message },
-        { status: 500, headers: noStoreHeaders }
+        { ok: false, reason: result.reason ?? "failed", error: result.message },
+        { status: statusCode, headers: noStoreHeaders }
       );
     }
     return NextResponse.json(
