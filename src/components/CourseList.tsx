@@ -14,10 +14,8 @@ type CourseListProps = {
   courses: CourseItem[];
   activeDate: string;
   selectedByDate: Record<string, number>;
-  favoriteCourseIds: number[];
   onAssignCourse: (courseId: number, startDate: string) => void;
   onRemoveCourse: (startDate: string) => void;
-  onToggleFavorite: (courseId: number) => void;
 };
 
 function formatDate(isoDate: string): string {
@@ -30,10 +28,8 @@ export function CourseList({
   courses,
   activeDate,
   selectedByDate,
-  favoriteCourseIds,
   onAssignCourse,
-  onRemoveCourse,
-  onToggleFavorite
+  onRemoveCourse
 }: CourseListProps) {
   if (courses.length === 0) {
     return (
@@ -52,19 +48,7 @@ export function CourseList({
     <section className="course-grid" aria-live="polite">
       {courses.map((course) => (
         <article className="course-card" key={course.id}>
-          <div className="course-card-head">
-            <h3>{course.title}</h3>
-            <button
-              type="button"
-              className={`favorite-btn ${
-                favoriteCourseIds.includes(course.id) ? "favorite-btn-active" : ""
-              }`}
-              aria-pressed={favoriteCourseIds.includes(course.id)}
-              onClick={() => onToggleFavorite(course.id)}
-            >
-              {favoriteCourseIds.includes(course.id) ? "★ Favorit" : "☆ Merken"}
-            </button>
-          </div>
+          <h3>{course.title}</h3>
           <p className="course-meta">{course.area ?? "Bereich nicht angegeben"}</p>
           <ul>
             <li>

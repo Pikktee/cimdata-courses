@@ -63,8 +63,6 @@ export function CourseBrowser({
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("all");
   const [selectedCoursesByDate, setSelectedCoursesByDate] = useState<Record<string, number>>({});
-  const [favoriteCourseIds, setFavoriteCourseIds] = useState<number[]>([]);
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
   const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
@@ -90,7 +88,6 @@ export function CourseBrowser({
 
       const parsed = JSON.parse(raw) as {
         selectedCoursesByDate?: unknown;
-        favoriteCourseIds?: unknown;
       };
 
       if (parsed.selectedCoursesByDate && typeof parsed.selectedCoursesByDate === "object") {
@@ -100,12 +97,6 @@ export function CourseBrowser({
         setSelectedCoursesByDate(Object.fromEntries(nextEntries));
       }
 
-      if (Array.isArray(parsed.favoriteCourseIds)) {
-        const validIds = parsed.favoriteCourseIds.filter(
-          (item): item is number => typeof item === "number"
-        );
-        setFavoriteCourseIds(validIds);
-      }
     } catch {
       // Ignore unreadable local state and start clean.
     } finally {
@@ -118,19 +109,16 @@ export function CourseBrowser({
     window.localStorage.setItem(
       STUDY_PLAN_STORAGE_KEY,
       JSON.stringify({
-        selectedCoursesByDate,
-        favoriteCourseIds
+        selectedCoursesByDate
       })
     );
-  }, [favoriteCourseIds, hasLoadedLocalPlan, selectedCoursesByDate]);
+  }, [hasLoadedLocalPlan, selectedCoursesByDate]);
 
   const filteredCourses = useMemo(() => {
-    return initial.courses.filter((course) => {
-      const matchesDate = selectedDate === "all" || course.startDates.includes(selectedDate);
-      const matchesFavorites = !favoritesOnly || favoriteCourseIds.includes(course.id);
-      return matchesDate && matchesFavorites;
-    });
-  }, [favoriteCourseIds, favoritesOnly, initial.courses, selectedDate]);
+    return initial.courses.filter(
+      (course) => selectedDate === "all" || course.startDates.includes(selectedDate)
+    );
+  }, [initial.courses, selectedDate]);
 
   const plannedEntries = useMemo(() => {
     return Object.entries(selectedCoursesByDate)
@@ -179,20 +167,9 @@ export function CourseBrowser({
     });
   }, []);
 
-  const handleToggleFavorite = useCallback((courseId: number) => {
-    setFavoriteCourseIds((current) => {
-      if (current.includes(courseId)) {
-        return current.filter((id) => id !== courseId);
-      }
-      return [...current, courseId];
-    });
-  }, []);
-
   const clearStudyPlan = useCallback(() => {
     setSelectedCoursesByDate({});
-    setFavoriteCourseIds([]);
-    setFavoritesOnly(false);
-    setManualRefreshNotice("Studienplan und Favoriten wurden lokal zurückgesetzt.");
+    setManualRefreshNotice("Studienplan wurde lokal zurückgesetzt.");
   }, []);
 
   const formattedPeriod = useMemo(() => {
@@ -247,17 +224,12 @@ export function CourseBrowser({
     }
 
     for (const [startDate, items] of map.entries()) {
-      items.sort((a, b) => {
-        const favDelta =
-          Number(favoriteCourseIds.includes(b.id)) - Number(favoriteCourseIds.includes(a.id));
-        if (favDelta !== 0) return favDelta;
-        return a.title.localeCompare(b.title, "de");
-      });
+      items.sort((a, b) => a.title.localeCompare(b.title, "de"));
       map.set(startDate, items);
     }
 
     return map;
-  }, [favoriteCourseIds, initial.courses]);
+  }, [initial.courses]);
 
   return (
     <>
@@ -269,15 +241,6 @@ export function CourseBrowser({
           courseCount={filteredCourses.length}
           disabled={false}
         />
-        <label className="favorites-filter" htmlFor="favorites-only">
-          <input
-            id="favorites-only"
-            type="checkbox"
-            checked={favoritesOnly}
-            onChange={(event) => setFavoritesOnly(event.target.checked)}
-          />
-          <span>Nur Favoriten anzeigen</span>
-        </label>
       </section>
 
       <section className="planner-layout">
@@ -285,10 +248,8 @@ export function CourseBrowser({
           courses={filteredCourses}
           activeDate={selectedDate}
           selectedByDate={selectedCoursesByDate}
-          favoriteCourseIds={favoriteCourseIds}
           onAssignCourse={handleAssignCourse}
           onRemoveCourse={handleRemoveCourse}
-          onToggleFavorite={handleToggleFavorite}
         />
 
         <aside className="plan-panel" aria-live="polite">
@@ -369,7 +330,6 @@ export function CourseBrowser({
                       >
                         {(courseOptionsByStartDate.get(entry.startDate) ?? []).map((option) => (
                           <option key={`${entry.startDate}-${option.id}`} value={option.id}>
-                            {favoriteCourseIds.includes(option.id) ? "★ " : ""}
                             {option.title}
                           </option>
                         ))}
