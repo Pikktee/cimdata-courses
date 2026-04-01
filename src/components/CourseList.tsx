@@ -52,6 +52,7 @@ export function CourseList({
         const assignedCourseId = isDateSelected ? selectedByDate[activeDate] : undefined;
         const isAssigned = assignedCourseId === course.id;
         const isReplacing = typeof assignedCourseId === "number" && assignedCourseId !== course.id;
+        const formattedActiveDate = isDateSelected ? formatDate(activeDate) : null;
         const actionLabel = !isDateSelected
           ? "Startdatum wählen"
           : isAssigned
@@ -62,10 +63,10 @@ export function CourseList({
         const actionTooltip = !isDateSelected
           ? "Bitte zuerst in der linken Spalte ein konkretes Startdatum wählen."
           : isAssigned
-            ? "Kurs für dieses Startdatum aus dem Studienplan entfernen."
+            ? `Kurs am ${formattedActiveDate} aus dem Studienplan entfernen.`
             : isReplacing
-              ? "Kurs für dieses Startdatum im Studienplan ersetzen."
-              : "Kurs für dieses Startdatum in den Studienplan aufnehmen.";
+              ? `Kurs für ${formattedActiveDate} im Studienplan ersetzen.`
+              : `Kurs für ${formattedActiveDate} in den Studienplan aufnehmen.`;
 
         return (
           <article className="course-card" key={course.id}>
