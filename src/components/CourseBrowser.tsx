@@ -183,23 +183,6 @@ export function CourseBrowser({
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [coursesById, selectedCoursesByDate]);
 
-  const gapCount = useMemo(() => {
-    let count = 0;
-    for (let i = 1; i < plannedEntries.length; i += 1) {
-      const previousEntry = plannedEntries[i - 1];
-      const currentEntry = plannedEntries[i];
-      const previousStart = parseIsoDate(previousEntry.startDate);
-      const currentStart = parseIsoDate(currentEntry.startDate);
-      const previousDurationDays = parseDurationDays(previousEntry.course.durationText);
-      const previousEndExclusive = new Date(
-        previousStart.getTime() + previousDurationDays * MS_PER_DAY
-      );
-      const gapFreeDays = Math.round((currentStart.getTime() - previousEndExclusive.getTime()) / MS_PER_DAY);
-      if (gapFreeDays >= 14) count += 1;
-    }
-    return count;
-  }, [plannedEntries]);
-
   const handleAssignCourse = useCallback(
     (courseId: number) => {
       if (selectedDate === "all") return;
@@ -263,6 +246,36 @@ export function CourseBrowser({
     if (!year || !month || !day) return isoDate;
     return `${day}.${month}.${year}`;
   }, []);
+
+  /** Freie Kalendertage zwischen Kursende (exkl.) und nächstem Kursstart (exkl.), mind. 14 Tage. */
+  const planGapRanges = useMemo(() => {
+    const ranges: { from: string; to: string }[] = [];
+    for (let i = 1; i < plannedEntries.length; i += 1) {
+      const previousEntry = plannedEntries[i - 1];
+      const currentEntry = plannedEntries[i];
+      const previousStart = parseIsoDate(previousEntry.startDate);
+      const currentStart = parseIsoDate(currentEntry.startDate);
+      const previousDurationDays = parseDurationDays(previousEntry.course.durationText);
+      const previousEndExclusive = new Date(
+        previousStart.getTime() + previousDurationDays * MS_PER_DAY
+      );
+      const gapFreeDays = Math.round((currentStart.getTime() - previousEndExclusive.getTime()) / MS_PER_DAY);
+      if (gapFreeDays < 14) continue;
+      const from = previousEndExclusive.toISOString().slice(0, 10);
+      const lastFree = new Date(currentStart.getTime() - MS_PER_DAY);
+      const to = lastFree.toISOString().slice(0, 10);
+      ranges.push({ from, to });
+    }
+    return ranges;
+  }, [plannedEntries]);
+
+  const gapCount = planGapRanges.length;
+
+  const gapTooltipText = useMemo(() => {
+    if (planGapRanges.length === 0) return "";
+    const lines = planGapRanges.map((g) => `• ${formatDate(g.from)} – ${formatDate(g.to)}`);
+    return `Zeiträume mit mindestens 14 freien Tagen zwischen zwei Kursen:\n${lines.join("\n")}`;
+  }, [planGapRanges, formatDate]);
 
   const handleManualRefresh = useCallback(() => {
     setManualRefreshNotice(null);
@@ -383,7 +396,32 @@ export function CourseBrowser({
                   </p>
                   {gapCount > 0 && (
                     <p className="plan-gap-hint">
-                      {gapCount} {gapCount === 1 ? "Lücke" : "Lücken"}
+                      <span
+                        className="plan-gap-hint-inner has-tooltip"
+                        data-tooltip={gapTooltipText}
+                        aria-label={gapTooltipText}
+                      >
+                        <svg className="plan-gap-hint-icon" viewBox="0 0 24 24" aria-hidden>
+                          <path
+                            d="M12 9v4M12 17h.01"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span>
+                          {gapCount}&nbsp;{gapCount === 1 ? "Lücke" : "Lücken"}
+                        </span>
+                      </span>
                     </p>
                   )}
                 </div>

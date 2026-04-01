@@ -662,7 +662,8 @@ body {
   right: 0.9rem;
 }
 
-.course-plan-tooltip-wrap.has-tooltip:hover::after {
+.course-plan-tooltip-wrap.has-tooltip:hover::after,
+.plan-gap-hint-inner.has-tooltip:hover::after {
   content: attr(data-tooltip);
   position: absolute;
   right: 0;
@@ -676,6 +677,13 @@ body {
   line-height: 1.4;
   box-shadow: var(--shadow-lg);
   z-index: 2;
+}
+
+.plan-gap-hint-inner.has-tooltip:hover::after {
+  left: 0;
+  right: auto;
+  white-space: pre-line;
+  width: min(300px, 92vw);
 }
 
 .course-plan-icon-btn {
@@ -937,9 +945,29 @@ body {
 }
 
 .plan-gap-hint {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
   color: #d97706 !important;
   font-weight: 650;
   font-size: 0.74rem !important;
+}
+
+.plan-gap-hint-inner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  max-width: 100%;
+  cursor: help;
+}
+
+.plan-gap-hint-icon {
+  flex-shrink: 0;
+  width: 0.92rem;
+  height: 0.92rem;
+  opacity: 0.95;
 }
 
 .plan-course-list {
