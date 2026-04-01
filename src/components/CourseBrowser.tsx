@@ -56,8 +56,29 @@ function parseIsoDate(iso: string): Date {
 
 function parseDurationDays(durationText: string | null): number {
   if (!durationText) return 14;
-  if (/\b4\b/.test(durationText)) return 28;
-  return 14;
+  const text = durationText.toLowerCase();
+  const numberMatches = Array.from(text.matchAll(/(\d+(?:[.,]\d+)?)/g))
+    .map((match) => Number(match[1].replace(",", ".")))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (numberMatches.length === 0) return 14;
+
+  const maxNumber = Math.max(...numberMatches);
+
+  if (text.includes("tag")) {
+    return Math.round(maxNumber);
+  }
+
+  if (text.includes("monat")) {
+    return Math.round(maxNumber * 28);
+  }
+
+  if (text.includes("woche")) {
+    return Math.round(maxNumber * 7);
+  }
+
+  // Fallback: numerischen Wert als Wochen interpretieren (CIMDATA liefert typischerweise Wochen).
+  return Math.round(maxNumber * 7);
 }
 
 function normalizeCourseTitle(title: string): string {
