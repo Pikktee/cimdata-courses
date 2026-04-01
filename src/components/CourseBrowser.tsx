@@ -183,9 +183,8 @@ export function CourseBrowser({
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [coursesById, selectedCoursesByDate]);
 
-  const gapHints = useMemo(() => {
-    const gaps: { from: string; to: string; gapSlots: number }[] = [];
-
+  const gapCount = useMemo(() => {
+    let count = 0;
     for (let i = 1; i < plannedEntries.length; i += 1) {
       const previousEntry = plannedEntries[i - 1];
       const currentEntry = plannedEntries[i];
@@ -196,16 +195,9 @@ export function CourseBrowser({
         previousStart.getTime() + previousDurationDays * MS_PER_DAY
       );
       const gapFreeDays = Math.round((currentStart.getTime() - previousEndExclusive.getTime()) / MS_PER_DAY);
-      if (gapFreeDays < 14) continue;
-      const gapSlots = Math.floor(gapFreeDays / 14);
-      gaps.push({
-        from: previousEntry.startDate,
-        to: currentEntry.startDate,
-        gapSlots
-      });
+      if (gapFreeDays >= 14) count += 1;
     }
-
-    return gaps;
+    return count;
   }, [plannedEntries]);
 
   const handleAssignCourse = useCallback(
@@ -388,23 +380,12 @@ export function CourseBrowser({
                       </>
                     )}
                   </p>
-                  {gapHints.length > 0 && (
+                  {gapCount > 0 && (
                     <p className="plan-gap-hint">
-                      {gapHints.length} {gapHints.length === 1 ? "Lücke" : "Lücken"}
+                      {gapCount} {gapCount === 1 ? "Lücke" : "Lücken"}
                     </p>
                   )}
                 </div>
-
-                {gapHints.length > 0 && (
-                  <ul className="plan-gap-list">
-                    {gapHints.map((gap) => (
-                      <li key={`${gap.from}-${gap.to}`}>
-                        {formatDate(gap.from)} — {formatDate(gap.to)}: {gap.gapSlots}{" "}
-                        {gap.gapSlots === 1 ? "14-Tage-Zeitraum frei" : "14-Tage-Zeiträume frei"}
-                      </li>
-                    ))}
-                  </ul>
-                )}
 
                 <ul className="plan-course-list">
                   {plannedEntries.map((entry) => (

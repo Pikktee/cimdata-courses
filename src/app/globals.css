@@ -875,20 +875,6 @@ body {
   font-size: 0.74rem !important;
 }
 
-.plan-gap-list {
-  margin: 0;
-  padding: 0.28rem 0 0.28rem 0.75rem;
-  border-radius: 0;
-  border: none;
-  border-left: 3px solid var(--warning);
-  background: transparent;
-  color: #92400e;
-  font-size: 0.74rem;
-  line-height: 1.42;
-  display: grid;
-  gap: 0.12rem;
-}
-
 .plan-course-list {
   margin: 0;
   padding: 0;
