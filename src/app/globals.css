@@ -1074,15 +1074,6 @@ body {
   padding-bottom: 0.15rem;
 }
 
-.plan-course-item:hover {
-  background: rgba(99, 102, 241, 0.04);
-  margin-left: -0.35rem;
-  margin-right: -0.35rem;
-  padding-left: 0.35rem;
-  padding-right: 0.35rem;
-  border-radius: var(--radius-xs);
-}
-
 .plan-course-item-head {
   display: flex;
   align-items: center;
