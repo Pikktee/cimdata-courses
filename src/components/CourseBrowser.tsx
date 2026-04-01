@@ -36,6 +36,9 @@ type CoursesResponse = {
 };
 
 const STUDY_PLAN_STORAGE_KEY = "cimdata-study-plan-v1";
+const PERMALINK_PLAN_PARAM = "plan";
+const PERMALINK_MINIMIZED_PARAM = "min";
+const PERMALINK_DATE_PARAM = "date";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function parseIsoDate(iso: string): Date {
@@ -102,6 +105,46 @@ function getRefreshStatusTone(status: string): "success" | "error" | "running" |
   }
 }
 
+function encodePlanParam(plan: Record<string, number>): string {
+  return Object.entries(plan)
+    .filter(([startDate, courseId]) => typeof startDate === "string" && Number.isInteger(courseId))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([startDate, courseId]) => `${startDate}:${courseId}`)
+    .join(",");
+}
+
+function decodePlanParam(raw: string, coursesById: Map<number, CourseItem>): Record<string, number> {
+  if (!raw) return {};
+  const entries = raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [startDate, courseIdRaw] = part.split(":");
+      const courseId = Number(courseIdRaw);
+      if (!startDate || !Number.isInteger(courseId) || !coursesById.has(courseId)) return null;
+      return [startDate, courseId] as const;
+    })
+    .filter((entry): entry is readonly [string, number] => entry !== null);
+  return Object.fromEntries(entries);
+}
+
+function encodeMinimizedParam(ids: number[]): string {
+  return ids.filter(Number.isInteger).join(",");
+}
+
+function decodeMinimizedParam(raw: string, coursesById: Map<number, CourseItem>): number[] {
+  if (!raw) return [];
+  return Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((part) => Number(part.trim()))
+        .filter((id) => Number.isInteger(id) && coursesById.has(id))
+    )
+  );
+}
+
 export function CourseBrowser({
   initial
 }: {
@@ -118,6 +161,7 @@ export function CourseBrowser({
     Record<string, "add" | "replace" | "removing">
   >({});
   const [planPendingRemoval, setPlanPendingRemoval] = useState<Record<string, boolean>>({});
+  const [permalinkNotice, setPermalinkNotice] = useState<string | null>(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
 
   const handleDateChange = useCallback((value: string) => {
@@ -131,6 +175,20 @@ export function CourseBrowser({
 
   useEffect(() => {
     try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlPlanRaw = searchParams.get(PERMALINK_PLAN_PARAM);
+      const urlMinRaw = searchParams.get(PERMALINK_MINIMIZED_PARAM);
+      const urlDate = searchParams.get(PERMALINK_DATE_PARAM);
+      if (urlPlanRaw || urlMinRaw || urlDate) {
+        setSelectedCoursesByDate(decodePlanParam(urlPlanRaw ?? "", coursesById));
+        setMinimizedCourseIds(decodeMinimizedParam(urlMinRaw ?? "", coursesById));
+        if (urlDate && (urlDate === "all" || /^\d{4}-\d{2}-\d{2}$/.test(urlDate))) {
+          setSelectedDate(urlDate);
+        }
+        setHasLoadedLocalPlan(true);
+        return;
+      }
+
       const raw = window.localStorage.getItem(STUDY_PLAN_STORAGE_KEY);
       if (!raw) {
         setHasLoadedLocalPlan(true);
@@ -162,7 +220,7 @@ export function CourseBrowser({
     } finally {
       setHasLoadedLocalPlan(true);
     }
-  }, []);
+  }, [coursesById]);
 
   useEffect(() => {
     if (!hasLoadedLocalPlan) return;
@@ -180,6 +238,12 @@ export function CourseBrowser({
     const timer = window.setTimeout(() => setPlanActionNotice(null), 5000);
     return () => clearTimeout(timer);
   }, [planActionNotice]);
+
+  useEffect(() => {
+    if (!permalinkNotice) return;
+    const timer = window.setTimeout(() => setPermalinkNotice(null), 2600);
+    return () => clearTimeout(timer);
+  }, [permalinkNotice]);
 
   const minimizedCourseIdSet = useMemo(() => new Set(minimizedCourseIds), [minimizedCourseIds]);
 
@@ -376,6 +440,36 @@ export function CourseBrowser({
     });
   }, [router]);
 
+  const handleCreatePermalink = useCallback(async () => {
+    const planParam = encodePlanParam(selectedCoursesByDate);
+    const minimizedParam = encodeMinimizedParam(minimizedCourseIds);
+    const url = new URL(window.location.href);
+    if (planParam) {
+      url.searchParams.set(PERMALINK_PLAN_PARAM, planParam);
+    } else {
+      url.searchParams.delete(PERMALINK_PLAN_PARAM);
+    }
+    if (minimizedParam) {
+      url.searchParams.set(PERMALINK_MINIMIZED_PARAM, minimizedParam);
+    } else {
+      url.searchParams.delete(PERMALINK_MINIMIZED_PARAM);
+    }
+    if (selectedDate !== "all") {
+      url.searchParams.set(PERMALINK_DATE_PARAM, selectedDate);
+    } else {
+      url.searchParams.delete(PERMALINK_DATE_PARAM);
+    }
+
+    window.history.replaceState({}, "", url.toString());
+
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      setPermalinkNotice("Permalink kopiert.");
+    } catch {
+      setPermalinkNotice("Permalink erstellt. Bitte URL aus der Adresszeile kopieren.");
+    }
+  }, [minimizedCourseIds, selectedCoursesByDate, selectedDate]);
+
   const latestRefresh = initial.latestRefresh;
   const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
   const latestStatusText = latestRefresh
@@ -398,6 +492,17 @@ export function CourseBrowser({
 
   return (
     <>
+      <div className="planner-top-actions" aria-live="polite">
+        <button
+          type="button"
+          className="planner-permalink-btn"
+          onClick={handleCreatePermalink}
+          title="Permalink zu den aktuellen Auswahloptionen erstellen"
+        >
+          Permalink
+        </button>
+        {permalinkNotice && <span className="planner-permalink-notice">{permalinkNotice}</span>}
+      </div>
       <section className="planner-layout">
         <aside className="planner-sidebar">
           <section className="toolbar">
