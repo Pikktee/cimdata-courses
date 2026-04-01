@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 
 type CourseItem = {
   id: number;
@@ -36,7 +36,6 @@ const MAX_INLINE_START_DATES = 4;
 const PREVIEW_BEFORE_MORE = 3;
 
 function CourseStartDates({ startDates }: { startDates: string[] }) {
-  const panelId = useId();
   const [expanded, setExpanded] = useState(false);
 
   if (!startDates.length) {
@@ -56,41 +55,24 @@ function CourseStartDates({ startDates }: { startDates: string[] }) {
   const moreLabel =
     tail.length === 1 ? "1 weiterer Termin" : `${tail.length} weitere Termine`;
 
+  if (expanded) {
+    return (
+      <span className="course-dates-inline">{sorted.map(formatDate).join(" · ")}</span>
+    );
+  }
+
   return (
-    <div className="course-dates-block">
+    <span className="course-dates-block">
       <span className="course-dates-inline">{head.map(formatDate).join(" · ")}</span>
       <button
         type="button"
-        className={`course-dates-toggle${expanded ? " course-dates-toggle--open" : ""}`}
-        aria-expanded={expanded}
-        aria-controls={panelId}
-        onClick={() => setExpanded((v) => !v)}
+        className="course-dates-more-link"
+        onClick={() => setExpanded(true)}
+        aria-label={`${moreLabel} anzeigen`}
       >
-        <span className="course-dates-toggle-chevron" aria-hidden>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </span>
-        <span className="course-dates-toggle-label">{expanded ? "Weniger anzeigen" : moreLabel}</span>
+        {moreLabel}
       </button>
-      <div
-        id={panelId}
-        className={`course-dates-panel-anim${expanded ? " course-dates-panel-anim--open" : ""}`}
-        role="region"
-        aria-label="Weitere Starttermine"
-        aria-hidden={!expanded}
-      >
-        <div className="course-dates-panel-inner">
-          <ul className="course-dates-expanded-list">
-            {tail.map((iso) => (
-              <li key={iso}>
-                <span className="course-dates-chip">{formatDate(iso)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
+    </span>
   );
 }
 

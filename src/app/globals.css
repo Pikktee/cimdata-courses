@@ -456,11 +456,11 @@ body {
 }
 
 .course-card-favorite {
-  border-color: rgba(245, 158, 11, 0.35);
+  border-color: rgba(99, 102, 241, 0.32);
   background: linear-gradient(
     158deg,
-    rgba(245, 158, 11, 0.1) 0%,
-    rgba(245, 158, 11, 0.04) 34%,
+    rgba(99, 102, 241, 0.09) 0%,
+    rgba(99, 102, 241, 0.04) 34%,
     var(--surface) 70%
   );
 }
@@ -493,13 +493,13 @@ body {
   align-items: center;
   width: fit-content;
   margin: 0;
-  padding: 0.18rem 0.62rem;
-  background: var(--primary-bg);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 650;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-radius: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
   letter-spacing: 0.01em;
 }
 
@@ -515,9 +515,9 @@ body {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(245, 158, 11, 0.28);
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
+  border: 1px solid var(--primary-border);
+  background: var(--primary-bg);
+  color: var(--primary-dark);
   font-size: 0.68rem;
   font-weight: 700;
   padding: 0.13rem 0.44rem;
@@ -578,10 +578,7 @@ body {
 }
 
 .course-dates-block {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.38rem;
+  display: inline;
   max-width: 100%;
 }
 
@@ -590,95 +587,31 @@ body {
   word-break: break-word;
 }
 
-.course-dates-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.42rem;
-  width: 100%;
-  margin: 0;
-  padding: 0.36rem 0.5rem;
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-sm);
-  background: var(--primary-bg);
-  color: var(--primary-dark);
-  font-size: 0.76rem;
-  font-weight: 650;
-  line-height: 1.25;
-  text-align: left;
+.course-dates-more-link {
+  margin-left: 0.28rem;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.14rem;
   cursor: pointer;
-  transition:
-    background-color var(--duration) var(--ease),
-    border-color var(--duration) var(--ease),
-    box-shadow var(--duration) var(--ease);
+  transition: color var(--duration) var(--ease), text-decoration-color var(--duration) var(--ease);
 }
 
-.course-dates-toggle:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.28);
+.course-dates-more-link:hover {
+  color: var(--primary-hover);
+  text-decoration-color: var(--primary-border);
 }
 
-.course-dates-toggle:focus-visible {
+.course-dates-more-link:focus-visible {
   outline: none;
   box-shadow: var(--ring);
-}
-
-.course-dates-toggle-chevron {
-  display: inline-flex;
-  flex-shrink: 0;
-  opacity: 0.85;
-  transition: transform var(--duration) var(--ease);
-}
-
-.course-dates-toggle--open .course-dates-toggle-chevron {
-  transform: rotate(180deg);
-}
-
-.course-dates-toggle-label {
-  flex: 1;
-  min-width: 0;
-}
-
-.course-dates-panel-anim {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.22s var(--ease);
-}
-
-.course-dates-panel-anim--open {
-  grid-template-rows: 1fr;
-}
-
-.course-dates-panel-inner {
-  overflow: hidden;
-  min-height: 0;
-}
-
-.course-dates-panel-anim--open .course-dates-panel-inner {
-  padding-top: 0.42rem;
-}
-
-.course-dates-expanded-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.42rem 0.45rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.32rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
-}
-
-.course-dates-chip {
-  display: inline-block;
-  padding: 0.14rem 0.48rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 0.74rem;
-  font-weight: 550;
-  color: var(--text-secondary);
-  line-height: 1.3;
+  border-radius: 2px;
 }
 
 /* ─ Card Action Buttons ─ */
@@ -750,9 +683,9 @@ body {
 .course-favorite-btn {
   width: 2rem;
   height: 2rem;
-  border: 1px solid rgba(245, 158, 11, 0.24);
-  background: rgba(245, 158, 11, 0.08);
-  color: #b45309;
+  border: 1px solid var(--primary-border);
+  background: var(--primary-bg);
+  color: var(--primary);
   border-radius: var(--radius-xs);
   padding: 0;
   cursor: pointer;
@@ -773,15 +706,15 @@ body {
 }
 
 .course-favorite-btn:hover {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.42);
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.28);
   transform: scale(1.06);
 }
 
 .course-favorite-btn-active {
-  background: rgba(245, 158, 11, 0.18);
-  border-color: rgba(245, 158, 11, 0.45);
-  color: #a16207;
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.35);
+  color: var(--primary-dark);
 }
 
 .course-favorite-btn:focus-visible {
