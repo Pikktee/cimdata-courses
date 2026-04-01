@@ -1317,7 +1317,6 @@ body {
   transition: opacity var(--duration) var(--ease);
 }
 
-.plan-course-item:hover::before,
 .plan-course-item:focus-within::before {
   opacity: 0.95;
 }
