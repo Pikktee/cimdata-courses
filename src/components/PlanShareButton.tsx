@@ -70,7 +70,7 @@ export function PlanShareButton() {
         type="button"
         className="hero-share-btn"
         onClick={handleShare}
-        title="Aktuellen Plan teilen (inkl. ausgewählter Optionen)"
+        aria-label="Plan teilen: aktuellen Link in die Zwischenablage kopieren. Umfasst Startdatum, Studienplan und ausgeblendete Kurse."
       >
         Plan teilen
       </button>
