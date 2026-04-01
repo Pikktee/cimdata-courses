@@ -408,11 +408,22 @@ export function CourseBrowser({
           <div className="refresh-summary-actions">
             <button
               type="button"
-              className="manual-refresh-btn"
+              className="manual-refresh-icon-btn"
               onClick={handleManualRefresh}
               disabled={isRefreshingNow}
+              aria-label="Daten jetzt aktualisieren"
+              title="Daten jetzt aktualisieren"
             >
-              {isRefreshingNow ? "Refresh läuft..." : "Refresh jetzt starten"}
+              <svg viewBox="0 0 24 24" aria-hidden>
+                <path
+                  d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
             {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
           </div>
