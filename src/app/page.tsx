@@ -18,20 +18,20 @@ export default async function HomePage() {
     <main className="app-shell">
       <header className="hero">
         <div className="hero-topline">
-          <p className="eyebrow">CIMDATA WEITERBILDUNG</p>
+          <p className="eyebrow">Weiterbildung planen</p>
           <div className="hero-badges" aria-label="Übersicht">
             <span>{initialData.courses.length} Kurse</span>
-            <span>{initialData.availableStartDates.length} Starttermine</span>
+            <span>{initialData.availableStartDates.length} Termine</span>
           </div>
         </div>
 
-        <h1>Cimdata Studienplaner</h1>
+        <h1>CIMDATA Studienplaner</h1>
         <p className="hero-copy">
-          Plane deinen persönlichen Lernpfad mit konkreten Startterminen, tausche Kurse flexibel
-          pro Termin aus und behalte Zeitraum sowie zeitliche Lücken jederzeit im Blick.
+          Finde passende Weiterbildungen, plane deinen Lernpfad mit konkreten
+          Startterminen und behalte zeitliche Lücken im Blick.
         </p>
         <p className="hero-copy hero-copy-secondary">
-          Datenquelle:{" "}
+          Quelle:{" "}
           <a
             className="hero-copy-link"
             href="https://www.cimdata.de/"

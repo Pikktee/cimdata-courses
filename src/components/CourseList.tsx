@@ -122,21 +122,35 @@ export function CourseList({
                 )}
               </button>
             </div>
+            <p className="course-meta">{course.area ?? "Allgemein"}</p>
             <h3>{course.title}</h3>
-            <p className="course-meta">{course.area ?? "Bereich nicht angegeben"}</p>
-            <ul>
-              <li>
-                <strong>Dauer:</strong> {course.durationText ?? "k. A."}
-              </li>
-              <li>
-                <strong>Starttermine:</strong> {course.startDates.length || "k. A."}
-              </li>
-            </ul>
+            <dl className="course-details">
+              <div className="course-detail-row">
+                <dt>
+                  <svg viewBox="0 0 24 24" aria-hidden>
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M12 6v6l4 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  Dauer
+                </dt>
+                <dd>{course.durationText ?? "k. A."}</dd>
+              </div>
+              <div className="course-detail-row">
+                <dt>
+                  <svg viewBox="0 0 24 24" aria-hidden>
+                    <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M16 2v4M8 2v4M3 10h18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  Termine
+                </dt>
+                <dd>{course.startDates.length || "k. A."}</dd>
+              </div>
+            </dl>
             <div className="course-card-footer">
               <a className="course-link" href={course.url} target="_blank" rel="noreferrer">
-                <span className="course-link-text">Kurs bei CIMDATA öffnen</span>
+                <span className="course-link-text">Kurs bei CIMDATA</span>
                 <span className="course-link-icon" aria-hidden>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <path d="M15 3h6v6" />
                     <path d="M10 14 21 3" />

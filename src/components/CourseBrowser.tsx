@@ -45,11 +45,11 @@ function formatDateTime(value: string | null): string {
 function formatRefreshStatus(status: string): string {
   switch (status) {
     case "success":
-      return "erfolgreich";
+      return "Erfolgreich";
     case "failed":
-      return "fehlgeschlagen";
+      return "Fehlgeschlagen";
     case "running":
-      return "läuft";
+      return "Läuft";
     default:
       return status;
   }
@@ -193,7 +193,7 @@ export function CourseBrowser({
 
   const clearStudyPlan = useCallback(() => {
     setSelectedCoursesByDate({});
-    setManualRefreshNotice("Studienplan wurde lokal zurückgesetzt.");
+    setManualRefreshNotice("Studienplan wurde zurückgesetzt.");
   }, []);
 
   const formattedPeriod = useMemo(() => {
@@ -221,16 +221,16 @@ export function CourseBrowser({
           );
         } else if (result.reason === "already-running") {
           setManualRefreshNotice(
-            "Refresh nicht gestartet, weil bereits ein anderer Refresh läuft. Details unten im Statusbereich."
+            "Ein Refresh läuft bereits."
           );
         } else {
           setManualRefreshNotice(
-            "Refresh fehlgeschlagen. Details findest du unten im Statusbereich."
+            "Refresh fehlgeschlagen. Details im Statusbereich."
           );
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        setManualRefreshNotice(`Refresh fehlgeschlagen: ${message}`);
+        setManualRefreshNotice(`Fehler: ${message}`);
       } finally {
         router.refresh();
       }
@@ -259,7 +259,7 @@ export function CourseBrowser({
   const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
   const latestStatusText = latestRefresh
     ? formatRefreshStatus(latestRefresh.status)
-    : "unbekannt";
+    : "Unbekannt";
   const refreshTimestampLabel =
     latestRefresh?.status === "running"
       ? "Läuft seit"
@@ -273,7 +273,7 @@ export function CourseBrowser({
         ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
         : latestRefresh
           ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
-          : "Noch kein Refresh gestartet";
+          : "Noch kein Refresh";
 
   return (
     <>
@@ -290,29 +290,28 @@ export function CourseBrowser({
 
           <aside className="plan-panel" aria-live="polite">
             <div className="plan-panel-head">
-              <p className="plan-panel-eyebrow">Mein Studienplan</p>
-              <h2>Lokale Planung</h2>
+              <p className="plan-panel-eyebrow">Studienplan</p>
+              <h2>Deine Planung</h2>
             </div>
 
             {plannedEntries.length === 0 ? (
               <p className="plan-empty">
-                Wähle links ein Startdatum und füge danach in den Kurskacheln passende Kurse hinzu.
+                Wähle ein Startdatum und füge Kurse aus dem Raster hinzu, um deinen Studienplan zu erstellen.
               </p>
             ) : (
               <>
                 <div className="plan-stats">
+                  <p className="plan-stats-count">
+                    <strong>{plannedEntries.length}</strong> {plannedEntries.length === 1 ? "Kurs" : "Kurse"} geplant
+                  </p>
                   {formattedPeriod && (
                     <p>
-                      Zeitraum:{" "}
-                      <strong>
-                        {formatDate(formattedPeriod.first)} - {formatDate(formattedPeriod.last)}
-                      </strong>
+                      {formatDate(formattedPeriod.first)} — {formatDate(formattedPeriod.last)}
                     </p>
                   )}
                   {gapHints.length > 0 && (
                     <p className="plan-gap-hint">
-                      Achtung: {gapHints.length} zeitliche{" "}
-                      {gapHints.length === 1 ? "Lücke erkannt." : "Lücken erkannt."}
+                      {gapHints.length} {gapHints.length === 1 ? "Lücke" : "Lücken"} erkannt
                     </p>
                   )}
                 </div>
@@ -321,8 +320,8 @@ export function CourseBrowser({
                   <ul className="plan-gap-list">
                     {gapHints.map((gap) => (
                       <li key={`${gap.from}-${gap.to}`}>
-                        {formatDate(gap.from)} bis {formatDate(gap.to)}: {gap.gapDays}{" "}
-                        {gap.gapDays === 1 ? "Tag frei" : "Tage frei"}
+                        {formatDate(gap.from)} — {formatDate(gap.to)}: {gap.gapDays}{" "}
+                        {gap.gapDays === 1 ? "Tag" : "Tage"} frei
                       </li>
                     ))}
                   </ul>
@@ -337,17 +336,16 @@ export function CourseBrowser({
                           type="button"
                           className="plan-remove-icon-btn"
                           aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
-                          title="Aus Studienplan entfernen"
+                          title="Entfernen"
                           onClick={() => handleRemoveCourse(entry.startDate)}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden>
                             <path
-                              d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
+                              d="M18 6 6 18M6 6l12 12"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="2"
                               strokeLinecap="round"
-                              strokeLinejoin="round"
                             />
                           </svg>
                         </button>
@@ -355,7 +353,7 @@ export function CourseBrowser({
                       <div>
                         <p className="plan-course-title">{entry.course.title}</p>
                         <label className="plan-swap-label" htmlFor={`swap-${entry.startDate}`}>
-                          Kurs tauschen:
+                          Kurs tauschen
                         </label>
                         <select
                           id={`swap-${entry.startDate}`}
@@ -377,7 +375,7 @@ export function CourseBrowser({
                 </ul>
 
                 <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
-                  Studienplan zurücksetzen
+                  Plan zurücksetzen
                 </button>
               </>
             )}
@@ -392,18 +390,19 @@ export function CourseBrowser({
           onRemoveCourse={handleRemoveCourse}
         />
       </section>
+
       <footer className="list-footer" aria-live="polite">
         <section className="refresh-summary-card" aria-label="Refresh-Status">
           <div className="refresh-summary-head">
             <div className="refresh-summary-title-wrap">
-              <p className="refresh-summary-title">Daten-Synchronisation</p>
+              <p className="refresh-summary-title">Synchronisation</p>
               <button
                 type="button"
                 className="manual-refresh-icon-btn"
                 onClick={handleManualRefresh}
                 disabled={isRefreshingNow}
                 aria-label="Daten jetzt aktualisieren"
-                title="Daten jetzt aktualisieren"
+                title="Daten aktualisieren"
               >
                 <svg viewBox="0 0 24 24" aria-hidden>
                   <path
@@ -421,20 +420,13 @@ export function CourseBrowser({
               {latestStatusText}
             </span>
           </div>
-          <p className="refresh-summary-hint">
-            {latestRefresh?.status === "failed"
-              ? "Der Refresh ist fehlgeschlagen. Der sichtbare Datenstand bleibt unverändert."
-              : latestRefresh?.status === "running"
-                ? "Ein Refresh läuft gerade. Die Ansicht aktualisiert sich nach Abschluss."
-                : "Kursdaten konnten zuletzt erfolgreich synchronisiert werden."}
-          </p>
           <p className="refresh-summary-time">
-            <span className="refresh-summary-time-label">{refreshTimestampLabel}</span>
+            <span className="refresh-summary-time-label">{refreshTimestampLabel}:</span>
             <strong>{refreshTimestampValue}</strong>
           </p>
           {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
           {latestRefresh?.status === "failed" && latestRefresh.message && (
-            <details className="refresh-error-details" open>
+            <details className="refresh-error-details">
               <summary className="status-error">
                 Fehlerdetails
                 <span className="refresh-error-time-inline">
@@ -455,4 +447,3 @@ export function CourseBrowser({
     </>
   );
 }
-
