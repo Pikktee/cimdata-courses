@@ -306,7 +306,7 @@ export function CourseList({
                       ) : showReplace ? (
                         <svg viewBox="0 0 24 24" aria-hidden>
                           <path
-                            d="M7 7h10v10M17 7l-3 3M7 17l3-3"
+                            d="M4 8h12M12 4l4 4-4 4M20 16H8M12 12l-4 4 4 4"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
