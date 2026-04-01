@@ -218,7 +218,6 @@ export function CourseList({
             </div>
             <div className="course-meta-row">
               <p className="course-meta">{course.area ?? "Allgemein"}</p>
-              {favorite && <span className="course-favorite-pill">Favorit</span>}
             </div>
             <h3>{course.title}</h3>
             <dl className="course-details">
