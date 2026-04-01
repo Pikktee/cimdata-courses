@@ -13,8 +13,9 @@ const displayFont = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "CIMDATA Kursübersicht",
-  description: "Kursübersicht nach konkreten Startterminen"
+  title: "CIMDATA Studienplaner",
+  description:
+    "CIMDATA-Weiterbildungen nach Starttermin durchsuchen, einen persönlichen Studienplan zusammenstellen und per Link teilen — inklusive ausgeblendeter Kurse und aktueller Filter in der URL."
 };
 
 export default function RootLayout({
