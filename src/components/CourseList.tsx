@@ -20,6 +20,8 @@ type CourseListProps = {
   selectedByDate: Record<string, number>;
   onAssignCourse: (courseId: number) => void;
   onRemoveCourse: (startDate: string) => void;
+  onToggleFavorite: (courseId: number) => void;
+  isFavorite: (courseId: number) => boolean;
   /** Kurs ist bereits unter anderem Termin im Plan (gleicher Titel / gleiche ID). */
   isCourseBlocked?: (courseId: number) => boolean;
 };
@@ -98,6 +100,8 @@ export function CourseList({
   selectedByDate,
   onAssignCourse,
   onRemoveCourse,
+  onToggleFavorite,
+  isFavorite,
   isCourseBlocked
 }: CourseListProps) {
   const isDateSelected = activeDate !== "all";
@@ -121,6 +125,7 @@ export function CourseList({
         const assignedCourseId = isDateSelected ? selectedByDate[activeDate] : undefined;
         const isAssigned = assignedCourseId === course.id;
         const isReplacing = typeof assignedCourseId === "number" && assignedCourseId !== course.id;
+        const favorite = isFavorite(course.id);
         const isDuplicateElsewhere = Boolean(isCourseBlocked?.(course.id));
         const actionBlocked = isDuplicateElsewhere && !isAssigned;
         const formattedActiveDate = isDateSelected ? formatDate(activeDate) : null;
@@ -147,65 +152,92 @@ export function CourseList({
 
         return (
           <article
-            className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}`}
+            className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}${favorite ? " course-card-favorite" : ""}`}
             key={course.id}
           >
-            <div
-              className="course-plan-tooltip-wrap has-tooltip course-card-action"
-              data-tooltip={actionTooltip}
-            >
-              <button
-                type="button"
-                className={`course-plan-icon-btn ${
-                  showRemove
-                    ? "course-plan-icon-btn-remove"
-                    : showReplace
-                      ? "course-plan-icon-btn-replace"
-                      : "course-plan-icon-btn-add"
-                }`}
-                disabled={!isDateSelected || actionBlocked}
-                onClick={() =>
-                  showRemove ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
-                }
-                aria-label={actionLabel}
+            <div className="course-card-actions">
+              <div
+                className="course-plan-tooltip-wrap has-tooltip course-card-action-favorite"
+                data-tooltip={favorite ? "Aus Favoriten entfernen" : "Als Favorit markieren"}
               >
-                {showRemove ? (
+                <button
+                  type="button"
+                  className={`course-favorite-btn${favorite ? " course-favorite-btn-active" : ""}`}
+                  onClick={() => onToggleFavorite(course.id)}
+                  aria-pressed={favorite}
+                  aria-label={favorite ? "Kurs ist Favorit. Klick zum Entfernen." : "Kurs als Favorit markieren"}
+                >
                   <svg viewBox="0 0 24 24" aria-hidden>
                     <path
-                      d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
-                      fill="none"
+                      d="m12 2.8 2.84 5.76 6.36.93-4.6 4.48 1.09 6.33L12 17.3l-5.69 2.99 1.09-6.33-4.6-4.48 6.36-.93L12 2.8Z"
+                      fill={favorite ? "currentColor" : "none"}
                       stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
+                      strokeWidth="1.8"
                       strokeLinejoin="round"
                     />
                   </svg>
-                ) : showReplace ? (
-                  <svg viewBox="0 0 24 24" aria-hidden>
-                    <path
-                      d="M7 7h10v10M17 7l-3 3M7 17l3-3"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" aria-hidden>
-                    <path
-                      d="M12 5v14M5 12h14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
+                </button>
+              </div>
+              <div
+                className="course-plan-tooltip-wrap has-tooltip course-card-action"
+                data-tooltip={actionTooltip}
+              >
+                <button
+                  type="button"
+                  className={`course-plan-icon-btn ${
+                    showRemove
+                      ? "course-plan-icon-btn-remove"
+                      : showReplace
+                        ? "course-plan-icon-btn-replace"
+                        : "course-plan-icon-btn-add"
+                  }`}
+                  disabled={!isDateSelected || actionBlocked}
+                  onClick={() =>
+                    showRemove ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
+                  }
+                  aria-label={actionLabel}
+                >
+                  {showRemove ? (
+                    <svg viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : showReplace ? (
+                    <svg viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        d="M7 7h10v10M17 7l-3 3M7 17l3-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" aria-hidden>
+                      <path
+                        d="M12 5v14M5 12h14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
-            <p className="course-meta">{course.area ?? "Allgemein"}</p>
+            <div className="course-meta-row">
+              <p className="course-meta">{course.area ?? "Allgemein"}</p>
+              {favorite && <span className="course-favorite-pill">Favorit</span>}
+            </div>
             <h3>{course.title}</h3>
             <dl className="course-details">
               <div className="course-detail-row">

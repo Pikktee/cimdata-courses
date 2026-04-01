@@ -110,6 +110,7 @@ export function CourseBrowser({
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("all");
   const [selectedCoursesByDate, setSelectedCoursesByDate] = useState<Record<string, number>>({});
+  const [favoriteCourseIds, setFavoriteCourseIds] = useState<number[]>([]);
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
   const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
   const [planActionNotice, setPlanActionNotice] = useState<string | null>(null);
@@ -134,6 +135,7 @@ export function CourseBrowser({
 
       const parsed = JSON.parse(raw) as {
         selectedCoursesByDate?: unknown;
+        favoriteCourseIds?: unknown;
       };
 
       if (parsed.selectedCoursesByDate && typeof parsed.selectedCoursesByDate === "object") {
@@ -141,6 +143,14 @@ export function CourseBrowser({
           ([startDate, courseId]) => typeof startDate === "string" && typeof courseId === "number"
         );
         setSelectedCoursesByDate(Object.fromEntries(nextEntries));
+      }
+
+      if (Array.isArray(parsed.favoriteCourseIds)) {
+        const favorites = parsed.favoriteCourseIds.filter(
+          (courseId): courseId is number =>
+            typeof courseId === "number" && Number.isInteger(courseId) && coursesById.has(courseId)
+        );
+        setFavoriteCourseIds(Array.from(new Set(favorites)));
       }
 
     } catch {
@@ -155,10 +165,11 @@ export function CourseBrowser({
     window.localStorage.setItem(
       STUDY_PLAN_STORAGE_KEY,
       JSON.stringify({
-        selectedCoursesByDate
+        selectedCoursesByDate,
+        favoriteCourseIds
       })
     );
-  }, [hasLoadedLocalPlan, selectedCoursesByDate]);
+  }, [favoriteCourseIds, hasLoadedLocalPlan, selectedCoursesByDate]);
 
   useEffect(() => {
     if (!planActionNotice) return;
@@ -166,11 +177,31 @@ export function CourseBrowser({
     return () => clearTimeout(timer);
   }, [planActionNotice]);
 
+  const favoriteCourseIdSet = useMemo(() => new Set(favoriteCourseIds), [favoriteCourseIds]);
+
   const filteredCourses = useMemo(() => {
-    return initial.courses.filter(
-      (course) => selectedDate === "all" || course.startDates.includes(selectedDate)
+    const visible = initial.courses
+      .map((course, index) => ({ course, index }))
+      .filter(
+        ({ course }) => selectedDate === "all" || course.startDates.includes(selectedDate)
+      );
+
+    visible.sort((a, b) => {
+      const aFavorite = favoriteCourseIdSet.has(a.course.id);
+      const bFavorite = favoriteCourseIdSet.has(b.course.id);
+      if (aFavorite === bFavorite) return a.index - b.index;
+      return aFavorite ? -1 : 1;
+    });
+
+    return visible.map(({ course }) => course);
+  }, [favoriteCourseIdSet, initial.courses, selectedDate]);
+
+  const favoriteVisibleCount = useMemo(() => {
+    return filteredCourses.reduce(
+      (count, course) => (favoriteCourseIdSet.has(course.id) ? count + 1 : count),
+      0
     );
-  }, [initial.courses, selectedDate]);
+  }, [favoriteCourseIdSet, filteredCourses]);
 
   const plannedEntries = useMemo(() => {
     return Object.entries(selectedCoursesByDate)
@@ -217,6 +248,15 @@ export function CourseBrowser({
       const next = { ...current };
       delete next[startDate];
       return next;
+    });
+  }, []);
+
+  const toggleCourseFavorite = useCallback((courseId: number) => {
+    setFavoriteCourseIds((current) => {
+      if (current.includes(courseId)) {
+        return current.filter((id) => id !== courseId);
+      }
+      return [courseId, ...current];
     });
   }, []);
 
@@ -336,6 +376,14 @@ export function CourseBrowser({
               disabled={false}
               className="control-card--sidebar"
             />
+            {favoriteCourseIds.length > 0 && (
+              <p className="favorites-summary" role="status">
+                <span aria-hidden>★</span>
+                <span>
+                  {favoriteVisibleCount} von {favoriteCourseIds.length} Favoriten aktuell sichtbar
+                </span>
+              </p>
+            )}
           </section>
 
           <aside className="plan-panel control-card control-card--sidebar" aria-live="polite">
@@ -485,6 +533,8 @@ export function CourseBrowser({
           onAssignCourse={handleAssignCourse}
           onRemoveCourse={handleRemoveCourse}
           isCourseBlocked={isCourseBlockedDuplicate}
+          isFavorite={(courseId) => favoriteCourseIdSet.has(courseId)}
+          onToggleFavorite={toggleCourseFavorite}
         />
       </section>
 
