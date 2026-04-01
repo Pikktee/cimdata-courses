@@ -56,11 +56,18 @@
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --duration: 160ms;
 
-  /* ─ Studienplan / Sidebar: klares Blau (an Primary angebunden) ─ */
+  /* ─ Studienplan / Sidebar: Akzente an Primary; Kartenfläche neutral ─ */
   --plan-accent: #4f46e5;
   --plan-accent-hover: #4338ca;
   --plan-accent-soft: #818cf8;
-  --plan-surface: #f4f6ff;
+  /* Startdatum- & Plan-Karte: warmes Grau, klar von Seitenhintergrund getrennt */
+  --sidebar-card-bg: #eeede8;
+  --sidebar-card-border: rgba(15, 23, 42, 0.1);
+  --sidebar-card-border-soft: rgba(15, 23, 42, 0.07);
+  --sidebar-card-inset-line: rgba(15, 23, 42, 0.05);
+  --sidebar-card-edge-glow: rgba(255, 255, 255, 0.65);
+  /* Ausgewählter Kurs (Raster) + aktiver Termin im Studienplan (~Primary 9% auf Weiß) */
+  --plan-selected-bg: #f4f3fb;
   --plan-accent-bg: rgba(79, 70, 229, 0.1);
   --plan-accent-bg-hover: rgba(79, 70, 229, 0.16);
   --plan-accent-border: rgba(79, 70, 229, 0.4);
@@ -391,17 +398,17 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* Sidebar: Startdatum + Studienplan — ruhige Fläche, weiche linke Lichtkante statt fetter Streifen */
+/* Sidebar: Startdatum + Studienplan — erhöhte Karte ohne Blaustich */
 .control-card--sidebar {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(79, 70, 229, 0.14);
-  background: var(--plan-surface);
+  border: 1px solid var(--sidebar-card-border);
+  background: var(--sidebar-card-bg);
   box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.05),
-    0 0 0 1px rgba(255, 255, 255, 0.75) inset,
-    inset 0 0 0 1px rgba(79, 70, 229, 0.05),
-    inset 10px 0 24px -10px rgba(79, 70, 229, 0.09);
+    0 1px 4px rgba(15, 23, 42, 0.07),
+    0 0 0 1px var(--sidebar-card-edge-glow) inset,
+    inset 0 0 0 1px var(--sidebar-card-inset-line),
+    inset 9px 0 22px -9px rgba(15, 23, 42, 0.045);
 }
 
 .control-card--sidebar > * {
@@ -412,7 +419,7 @@ body {
 .control-card--sidebar .control-head {
   padding-bottom: 0.42rem;
   margin-bottom: 0.1rem;
-  border-bottom: 1px solid rgba(79, 70, 229, 0.14);
+  border-bottom: 1px solid var(--sidebar-card-border-soft);
 }
 
 /* Studienplan: Tooltips (z. B. Lücken) nicht an der Kartenkante abschneiden */
@@ -582,7 +589,7 @@ body {
 }
 
 .course-card-in-plan {
-  background: var(--plan-surface);
+  background: var(--plan-selected-bg);
   border: 1px solid var(--plan-accent-border);
   box-shadow: var(--shadow-xs);
 }
@@ -1277,6 +1284,21 @@ body {
 .plan-course-item:last-child {
   border-bottom: none;
   padding-bottom: 0.15rem;
+}
+
+/* Gleiche Optik wie .course-card-in-plan — Termin entspricht gewähltem Startdatum */
+.plan-course-item--active-date {
+  background: var(--plan-selected-bg);
+  border: 1px solid var(--plan-accent-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
+  padding: 0.38rem 0.48rem 0.42rem;
+  margin: 0.2rem 0;
+  border-bottom: none;
+}
+
+.plan-course-item--active-date .plan-course-jump:hover {
+  background: var(--plan-accent-bg-hover);
 }
 
 .plan-course-item-head {

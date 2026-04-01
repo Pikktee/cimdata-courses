@@ -643,14 +643,17 @@ export function CourseBrowser({
                 </div>
 
                 <ul className="plan-course-list">
-                  {plannedEntries.map((entry) => (
+                  {plannedEntries.map((entry) => {
+                    const isActiveStartSlot =
+                      selectedDate !== "all" && entry.startDate === selectedDate;
+                    return (
                     <li
                       key={`${entry.startDate}-${entry.course.id}`}
                       className={`plan-course-item${
                         planEntryEffects[entry.startDate]
                           ? ` plan-course-item-${planEntryEffects[entry.startDate]}`
                           : ""
-                      }`}
+                      }${isActiveStartSlot ? " plan-course-item--active-date" : ""}`}
                     >
                       <div className="plan-course-item-head">
                         <button
@@ -702,7 +705,8 @@ export function CourseBrowser({
                         </span>
                       </button>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </>
             )}
