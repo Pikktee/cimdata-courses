@@ -79,32 +79,6 @@ function formatDateTime(value: string | null): string {
   return new Date(value).toLocaleString("de-DE");
 }
 
-function formatRefreshStatus(status: string): string {
-  switch (status) {
-    case "success":
-      return "Erfolgreich";
-    case "failed":
-      return "Fehlgeschlagen";
-    case "running":
-      return "Läuft";
-    default:
-      return status;
-  }
-}
-
-function getRefreshStatusTone(status: string): "success" | "error" | "running" | "neutral" {
-  switch (status) {
-    case "success":
-      return "success";
-    case "failed":
-      return "error";
-    case "running":
-      return "running";
-    default:
-      return "neutral";
-  }
-}
-
 function encodePlanParam(plan: Record<string, number>): string {
   return Object.entries(plan)
     .filter(([startDate, courseId]) => typeof startDate === "string" && Number.isInteger(courseId))
@@ -457,10 +431,12 @@ export function CourseBrowser({
   }, [router]);
 
   const latestRefresh = initial.latestRefresh;
-  const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
-  const latestStatusText = latestRefresh
-    ? formatRefreshStatus(latestRefresh.status)
-    : "Unbekannt";
+  const refreshFailed = latestRefresh?.status === "failed";
+  const syncErrorTooltip = refreshFailed
+    ? (latestRefresh?.message?.trim()
+        ? latestRefresh.message.replace(/\r?\n+/g, " ").trim().slice(0, 1200)
+        : "Synchronisation fehlgeschlagen.")
+    : "";
   const refreshTimestampLabel =
     latestRefresh?.status === "running"
       ? "Läuft seit"
@@ -651,17 +627,55 @@ export function CourseBrowser({
       </section>
 
       <footer className="list-footer" aria-live="polite">
-        <section className="refresh-summary-card" aria-label="Refresh-Status">
-          <div className="refresh-summary-head">
-            <div className="refresh-summary-title-wrap">
-              <p className="refresh-summary-title">Synchronisation</p>
+        <div className="footer-bar">
+          <p className="footer-bar-impressum">
+            <Link href="/impressum" className="footer-impressum-link">
+              Impressum &amp; Datenschutz
+            </Link>
+          </p>
+          <div className="footer-bar-sync">
+            <span className="footer-sync-meta">
+              <span className="footer-sync-label">{refreshTimestampLabel}:</span>{" "}
+              {latestRefresh ? (
+                <time
+                  className="footer-sync-time"
+                  dateTime={
+                    latestRefresh.status === "running"
+                      ? latestRefresh.startedAt
+                      : (latestRefresh.finishedAt ?? latestRefresh.startedAt)
+                  }
+                >
+                  {refreshTimestampValue}
+                </time>
+              ) : (
+                <span className="footer-sync-time">{refreshTimestampValue}</span>
+              )}
+            </span>
+            <span
+              className={
+                refreshFailed
+                  ? "footer-sync-btn-wrap has-tooltip-footer-sync-error"
+                  : "footer-sync-btn-wrap"
+              }
+              data-tooltip={refreshFailed ? syncErrorTooltip : undefined}
+            >
               <button
                 type="button"
-                className="manual-refresh-icon-btn"
+                className={`manual-refresh-icon-btn manual-refresh-icon-btn--footer${
+                  refreshFailed ? " manual-refresh-icon-btn--error" : ""
+                }`}
                 onClick={handleManualRefresh}
                 disabled={isRefreshingNow}
-                aria-label="Daten jetzt aktualisieren"
-                title="Daten aktualisieren"
+                aria-label={
+                  refreshFailed && syncErrorTooltip
+                    ? `Daten aktualisieren. Letzter Fehler: ${syncErrorTooltip.slice(0, 280)}`
+                    : "Daten jetzt aktualisieren"
+                }
+                title={
+                  refreshFailed && syncErrorTooltip
+                    ? syncErrorTooltip
+                    : "Daten aktualisieren"
+                }
               >
                 <svg viewBox="0 0 24 24" aria-hidden>
                   <path
@@ -674,34 +688,14 @@ export function CourseBrowser({
                   />
                 </svg>
               </button>
-            </div>
-            <span className={`refresh-status-badge refresh-status-badge-${latestStatusTone}`}>
-              {latestStatusText}
             </span>
           </div>
-          <p className="refresh-summary-time">
-            <span className="refresh-summary-time-label">{refreshTimestampLabel}:</span>
-            <strong>{refreshTimestampValue}</strong>
+        </div>
+        {manualRefreshNotice ? (
+          <p className="footer-manual-notice" role="status">
+            {manualRefreshNotice}
           </p>
-          {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
-          {latestRefresh?.status === "failed" && latestRefresh.message && (
-            <details className="refresh-error-details">
-              <summary className="status-error">
-                Fehlerdetails
-                <span className="refresh-error-time-inline">
-                  {" "}
-                  ({formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)})
-                </span>
-              </summary>
-              <pre className="refresh-error-pre">{latestRefresh.message}</pre>
-            </details>
-          )}
-        </section>
-        <p className="footer-line footer-legal">
-          <Link href="/impressum" className="footer-impressum-link">
-            Impressum &amp; Datenschutz
-          </Link>
-        </p>
+        ) : null}
       </footer>
     </>
   );
