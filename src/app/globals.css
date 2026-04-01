@@ -754,20 +754,6 @@ body {
   box-shadow: var(--ring);
 }
 
-.favorites-summary {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  color: #a16207;
-  font-size: 0.74rem;
-  font-weight: 640;
-  padding: 0.32rem 0.52rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  background: rgba(245, 158, 11, 0.09);
-}
-
 /* ─ Card Footer ─ */
 
 .course-card-footer {

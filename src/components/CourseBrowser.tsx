@@ -196,13 +196,6 @@ export function CourseBrowser({
     return visible.map(({ course }) => course);
   }, [favoriteCourseIdSet, initial.courses, selectedDate]);
 
-  const favoriteVisibleCount = useMemo(() => {
-    return filteredCourses.reduce(
-      (count, course) => (favoriteCourseIdSet.has(course.id) ? count + 1 : count),
-      0
-    );
-  }, [favoriteCourseIdSet, filteredCourses]);
-
   const plannedEntries = useMemo(() => {
     return Object.entries(selectedCoursesByDate)
       .map(([startDate, courseId]) => {
@@ -376,14 +369,6 @@ export function CourseBrowser({
               disabled={false}
               className="control-card--sidebar"
             />
-            {favoriteCourseIds.length > 0 && (
-              <p className="favorites-summary" role="status">
-                <span aria-hidden>★</span>
-                <span>
-                  {favoriteVisibleCount} von {favoriteCourseIds.length} Favoriten aktuell sichtbar
-                </span>
-              </p>
-            )}
           </section>
 
           <aside className="plan-panel control-card control-card--sidebar" aria-live="polite">
