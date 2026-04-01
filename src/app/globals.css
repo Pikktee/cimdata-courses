@@ -417,6 +417,8 @@ body {
 }
 
 .control-card--sidebar .control-head {
+  margin-inline: -1rem;
+  padding-inline: 1rem;
   padding-bottom: 0.42rem;
   margin-bottom: 0.1rem;
   border-bottom: 1px solid var(--sidebar-card-border-soft);
@@ -1127,6 +1129,8 @@ body {
 }
 
 .plan-panel > .plan-clear-btn {
+  margin-inline: -1rem;
+  padding-inline: 1rem;
   margin-top: 0;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
@@ -1251,7 +1255,7 @@ body {
 }
 
 .plan-course-list {
-  margin: 0;
+  margin: 0 -1rem;
   padding: 0;
   list-style: none;
   display: grid;
@@ -1350,10 +1354,6 @@ body {
   box-shadow: none;
   padding: 0.22rem 0;
   margin: 0;
-}
-
-.plan-course-item--active-date::before {
-  opacity: 1;
 }
 
 .plan-course-date {
