@@ -288,8 +288,10 @@ export function CourseBrowser({
 
           <aside className="plan-panel" aria-live="polite">
             <div className="plan-panel-head">
-              <p className="plan-panel-eyebrow">Studienplan</p>
-              <h2>Deine Planung</h2>
+              <div className="plan-panel-head-titles">
+                <p className="plan-panel-eyebrow">Studienplan</p>
+                <h2>Deine Planung</h2>
+              </div>
             </div>
 
             {plannedEntries.length === 0 ? (
@@ -299,17 +301,22 @@ export function CourseBrowser({
             ) : (
               <>
                 <div className="plan-stats">
-                  <p className="plan-stats-count">
-                    <strong>{plannedEntries.length}</strong> {plannedEntries.length === 1 ? "Kurs" : "Kurse"} geplant
+                  <p className="plan-stats-primary">
+                    <strong>{plannedEntries.length}</strong>{" "}
+                    {plannedEntries.length === 1 ? "Kurs" : "Kurse"}
+                    {formattedPeriod && (
+                      <>
+                        <span className="plan-stats-sep" aria-hidden>
+                          {" "}
+                          ·{" "}
+                        </span>
+                        {formatDate(formattedPeriod.first)} — {formatDate(formattedPeriod.last)}
+                      </>
+                    )}
                   </p>
-                  {formattedPeriod && (
-                    <p>
-                      {formatDate(formattedPeriod.first)} — {formatDate(formattedPeriod.last)}
-                    </p>
-                  )}
                   {gapHints.length > 0 && (
                     <p className="plan-gap-hint">
-                      {gapHints.length} {gapHints.length === 1 ? "Lücke" : "Lücken"} erkannt
+                      {gapHints.length} {gapHints.length === 1 ? "Lücke" : "Lücken"}
                     </p>
                   )}
                 </div>

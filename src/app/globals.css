@@ -224,9 +224,15 @@ body {
 
 .planner-sidebar {
   position: sticky;
-  top: 1rem;
+  bottom: 1rem;
+  top: auto;
+  align-self: start;
   display: grid;
-  gap: 0.8rem;
+  gap: 0.55rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 /* ══════════════════════════════════════════════
@@ -654,33 +660,41 @@ body {
 
 .plan-panel {
   display: grid;
-  gap: 0.72rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--primary);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  box-shadow: var(--shadow-sm);
+  gap: 0.42rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0.5rem 0 0;
+  box-shadow: none;
+  border-top: 1px solid var(--border);
+  margin-top: 0.1rem;
 }
 
 .plan-panel-head {
+  display: block;
+}
+
+.plan-panel-head-titles {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.05rem;
 }
 
 .plan-panel-eyebrow {
   margin: 0;
-  color: var(--primary);
-  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 0.62rem;
+  font-weight: 700;
 }
 
 .plan-panel h2 {
   margin: 0;
-  font-size: 1.12rem;
-  font-family: var(--font-display), Georgia, serif;
+  font-size: 0.92rem;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .manual-refresh-btn {
@@ -703,21 +717,24 @@ body {
 
 .plan-clear-btn {
   justify-self: start;
-  margin-top: 0.1rem;
-  border: 1px solid var(--border-hover);
-  background: var(--surface);
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 0.78rem;
-  font-weight: 620;
-  padding: 0.38rem 0.7rem;
+  margin-top: 0.15rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0;
   cursor: pointer;
-  transition: background-color var(--duration) var(--ease), color var(--duration) var(--ease);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.14rem;
+  transition: color var(--duration) var(--ease), text-decoration-color var(--duration) var(--ease);
 }
 
 .plan-clear-btn:hover {
-  background: var(--surface-alt);
-  color: var(--text);
+  color: var(--primary);
+  text-decoration-color: var(--primary-border);
 }
 
 .manual-refresh-btn:disabled {
@@ -739,52 +756,61 @@ body {
 
 .plan-empty {
   margin: 0;
-  padding: 0.9rem;
-  border-radius: var(--radius);
-  border: 1.5px dashed var(--border-hover);
-  background: var(--surface-alt);
+  padding: 0.45rem 0 0.45rem 0.65rem;
+  border-radius: 0;
+  border: none;
+  border-left: 2px solid var(--border-hover);
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 0.87rem;
-  line-height: 1.55;
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .plan-stats {
-  display: grid;
-  gap: 0.32rem;
-  padding: 0.7rem 0.82rem;
-  border-radius: var(--radius);
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.55rem;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .plan-stats p {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.76rem;
   color: var(--text-secondary);
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
-.plan-stats-count {
-  font-size: 0.88rem;
+.plan-stats-primary {
   color: var(--text) !important;
+  font-size: 0.78rem !important;
+}
+
+.plan-stats-sep {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .plan-gap-hint {
   color: #d97706 !important;
-  font-weight: 700;
+  font-weight: 650;
+  font-size: 0.74rem !important;
 }
 
 .plan-gap-list {
-  margin: -0.3rem 0 0;
-  padding: 0.65rem 0.9rem 0.7rem 1.4rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--warning-border);
-  background: var(--warning-bg);
+  margin: 0;
+  padding: 0.28rem 0 0.28rem 0.75rem;
+  border-radius: 0;
+  border: none;
+  border-left: 3px solid var(--warning);
+  background: transparent;
   color: #92400e;
-  font-size: 0.82rem;
-  line-height: 1.5;
+  font-size: 0.74rem;
+  line-height: 1.42;
   display: grid;
-  gap: 0.2rem;
+  gap: 0.12rem;
 }
 
 .plan-course-list {
@@ -792,29 +818,39 @@ body {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.42rem;
+  gap: 0;
 }
 
 .plan-course-item {
   display: grid;
-  gap: 0.38rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  padding: 0.65rem 0.7rem;
-  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+  gap: 0.18rem;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--duration) var(--ease);
+}
+
+.plan-course-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0.15rem;
 }
 
 .plan-course-item:hover {
-  border-color: var(--primary-border);
-  box-shadow: var(--shadow-xs);
+  background: rgba(99, 102, 241, 0.04);
+  margin-left: -0.35rem;
+  margin-right: -0.35rem;
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+  border-radius: var(--radius-xs);
 }
 
 .plan-course-item-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
 .plan-course-date {
@@ -831,8 +867,8 @@ body {
   padding: 0;
   margin: 0;
   color: var(--primary);
-  font-size: 0.74rem;
-  font-weight: 720;
+  font-size: 0.7rem;
+  font-weight: 650;
   letter-spacing: 0.01em;
   cursor: pointer;
   text-decoration: underline;
@@ -853,17 +889,17 @@ body {
 }
 
 .plan-course-title {
-  margin: 0.1rem 0 0;
-  font-size: 0.86rem;
+  margin: 0.04rem 0 0;
+  font-size: 0.8rem;
   color: var(--text);
-  line-height: 1.38;
+  line-height: 1.32;
   font-weight: 500;
 }
 
 .plan-course-duration {
-  margin: 0.2rem 0 0;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
+  margin: 0.12rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .plan-remove-icon-btn:focus-visible,
@@ -873,11 +909,11 @@ body {
 }
 
 .plan-remove-icon-btn {
-  width: 1.55rem;
-  height: 1.55rem;
-  border: 1px solid var(--danger-border);
-  background: var(--danger-bg);
-  color: var(--danger);
+  width: 1.38rem;
+  height: 1.38rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
   border-radius: var(--radius-xs);
   padding: 0;
   cursor: pointer;
@@ -886,17 +922,19 @@ body {
   justify-content: center;
   transition:
     background-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
     transform var(--duration) var(--ease);
 }
 
 .plan-remove-icon-btn svg {
-  width: 0.82rem;
-  height: 0.82rem;
+  width: 0.78rem;
+  height: 0.78rem;
 }
 
 .plan-remove-icon-btn:hover {
-  transform: scale(1.1);
-  background: rgba(239, 68, 68, 0.1);
+  transform: none;
+  color: var(--danger);
+  background: var(--danger-bg);
 }
 
 /* ══════════════════════════════════════════════
@@ -1241,6 +1279,10 @@ body {
 
   .planner-sidebar {
     position: static;
+    bottom: auto;
+    max-height: none;
+    overflow-y: visible;
+    scrollbar-gutter: auto;
   }
 
   .course-grid {
