@@ -637,9 +637,6 @@ export function CourseBrowser({
                           {entry.course.locationText ? (
                             <span className="plan-course-detail">{entry.course.locationText}</span>
                           ) : null}
-                          <span className="plan-course-duration">
-                            Dauer: {entry.course.durationText ?? "k. A."}
-                          </span>
                         </button>
                         <button
                           type="button"
