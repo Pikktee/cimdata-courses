@@ -55,11 +55,13 @@ export function PlanShareButton() {
         <span
           key={feedback.id}
           role="status"
-          className={
-            feedbackVisible
-              ? "hero-share-note hero-share-note--visible"
-              : "hero-share-note"
-          }
+          className={[
+            "hero-share-note",
+            feedback.text !== "Link kopiert" ? "hero-share-note--wrap" : "",
+            feedbackVisible ? "hero-share-note--visible" : ""
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           {feedback.text}
         </span>

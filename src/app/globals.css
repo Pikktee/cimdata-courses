@@ -191,14 +191,15 @@ body {
   right: calc(100% + 0.42rem);
   top: 50%;
   transform: translateY(-50%);
-  max-width: min(220px, 58vw);
+  width: max-content;
+  max-width: none;
   padding: 0.12rem 0;
   font-size: 0.69rem;
   font-weight: 560;
   line-height: 1.35;
   text-align: right;
   color: rgba(255, 255, 255, 0.88);
-  white-space: normal;
+  white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -206,6 +207,13 @@ body {
   transition:
     opacity 240ms var(--ease),
     visibility 240ms var(--ease);
+}
+
+/* Längere Fallback-Meldung darf bei wenig Platz umbrechen */
+.hero-share-note--wrap {
+  white-space: normal;
+  width: auto;
+  max-width: min(220px, 72vw);
 }
 
 .hero-share-note--visible {
