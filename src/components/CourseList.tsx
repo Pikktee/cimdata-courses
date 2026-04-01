@@ -14,6 +14,11 @@ type CourseItem = {
   startDates: string[];
 };
 
+type ScrollToCourseRequest = {
+  courseId: number;
+  requestId: number;
+};
+
 type CourseListProps = {
   courses: CourseItem[];
   activeDate: string;
@@ -24,6 +29,8 @@ type CourseListProps = {
   isMinimized: (courseId: number) => boolean;
   /** Kurs ist bereits unter anderem Termin im Plan (gleicher Titel / gleiche ID). */
   isCourseBlocked?: (courseId: number) => boolean;
+  scrollToCourseRequest?: ScrollToCourseRequest | null;
+  onScrollToCourseHandled?: () => void;
 };
 
 function formatDate(isoDate: string): string {
@@ -89,7 +96,9 @@ export function CourseList({
   onRemoveCourse,
   onToggleMinimized,
   isMinimized,
-  isCourseBlocked
+  isCourseBlocked,
+  scrollToCourseRequest,
+  onScrollToCourseHandled
 }: CourseListProps) {
   const isDateSelected = activeDate !== "all";
   const [minimizingCourseIds, setMinimizingCourseIds] = useState<number[]>([]);
@@ -102,6 +111,43 @@ export function CourseList({
       minimizeTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     };
   }, []);
+
+  useEffect(() => {
+    if (!scrollToCourseRequest || !onScrollToCourseHandled) return;
+    const { courseId } = scrollToCourseRequest;
+    const timeoutIds: number[] = [];
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 18;
+
+    const tick = () => {
+      if (cancelled) return;
+      const el = document.getElementById(`course-card-${courseId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        onScrollToCourseHandled();
+        return;
+      }
+      attempts += 1;
+      if (attempts >= maxAttempts) {
+        onScrollToCourseHandled();
+        return;
+      }
+      timeoutIds.push(window.setTimeout(tick, 55));
+    };
+
+    let innerRaf = 0;
+    const outerRaf = requestAnimationFrame(() => {
+      innerRaf = requestAnimationFrame(tick);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(outerRaf);
+      cancelAnimationFrame(innerRaf);
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+    };
+  }, [scrollToCourseRequest, onScrollToCourseHandled]);
 
   const startMinimize = (courseId: number) => {
     if (minimizingCourseIds.includes(courseId)) return;
@@ -161,6 +207,7 @@ export function CourseList({
 
             return (
               <article
+                id={`course-card-${course.id}`}
                 className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}${minimizingCourseIds.includes(course.id) ? " course-card-minimizing" : ""}`}
                 key={course.id}
               >

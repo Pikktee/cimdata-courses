@@ -1208,16 +1208,62 @@ body {
   border-radius: 2px;
 }
 
+.plan-course-jump {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  margin: 0.12rem 0 0;
+  padding: 0.32rem 0.28rem;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color var(--duration) var(--ease);
+}
+
+.plan-course-jump:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.plan-course-jump:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.plan-course-area {
+  display: block;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
 .plan-course-title {
-  margin: 0.04rem 0 0;
+  display: block;
+  margin: 0;
   font-size: 0.8rem;
   color: var(--text);
   line-height: 1.32;
   font-weight: 500;
 }
 
+.plan-course-detail {
+  display: block;
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.38;
+}
+
 .plan-course-duration {
-  margin: 0.12rem 0 0;
+  display: block;
+  margin: 0.04rem 0 0;
   font-size: 0.72rem;
   color: var(--text-muted);
 }

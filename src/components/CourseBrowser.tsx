@@ -136,6 +136,10 @@ export function CourseBrowser({
   >({});
   const [planPendingRemoval, setPlanPendingRemoval] = useState<Record<string, boolean>>({});
   const [isRefreshingNow, startRefreshTransition] = useTransition();
+  const [scrollToCourseRequest, setScrollToCourseRequest] = useState<{
+    courseId: number;
+    requestId: number;
+  } | null>(null);
 
   const handleDateChange = useCallback((value: string) => {
     setSelectedDate(value);
@@ -343,6 +347,25 @@ export function CourseBrowser({
       return [courseId, ...current];
     });
   }, []);
+
+  const ensureCourseVisibleInList = useCallback((courseId: number) => {
+    setMinimizedCourseIds((current) =>
+      current.includes(courseId) ? current.filter((id) => id !== courseId) : current
+    );
+  }, []);
+
+  const clearScrollToCourseRequest = useCallback(() => {
+    setScrollToCourseRequest(null);
+  }, []);
+
+  const handleJumpToCourseFromPlan = useCallback(
+    (startDate: string, courseId: number) => {
+      handleDateChange(startDate);
+      ensureCourseVisibleInList(courseId);
+      setScrollToCourseRequest({ courseId, requestId: Date.now() });
+    },
+    [handleDateChange, ensureCourseVisibleInList]
+  );
 
   const clearStudyPlan = useCallback(() => {
     const shouldClear = window.confirm(
@@ -593,12 +616,28 @@ export function CourseBrowser({
                           </svg>
                         </button>
                       </div>
-                      <div>
-                        <p className="plan-course-title">{entry.course.title}</p>
-                        <p className="plan-course-duration">
+                      <button
+                        type="button"
+                        className="plan-course-jump"
+                        onClick={() =>
+                          handleJumpToCourseFromPlan(entry.startDate, entry.course.id)
+                        }
+                        aria-label={`Zur Kurskarte scrollen: ${entry.course.title}`}
+                      >
+                        {entry.course.area ? (
+                          <span className="plan-course-area">{entry.course.area}</span>
+                        ) : null}
+                        <span className="plan-course-title">{entry.course.title}</span>
+                        {entry.course.scheduleText ? (
+                          <span className="plan-course-detail">{entry.course.scheduleText}</span>
+                        ) : null}
+                        {entry.course.locationText ? (
+                          <span className="plan-course-detail">{entry.course.locationText}</span>
+                        ) : null}
+                        <span className="plan-course-duration">
                           Dauer: {entry.course.durationText ?? "k. A."}
-                        </p>
-                      </div>
+                        </span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -623,6 +662,8 @@ export function CourseBrowser({
           isCourseBlocked={isCourseBlockedDuplicate}
           isMinimized={(courseId) => minimizedCourseIdSet.has(courseId)}
           onToggleMinimized={toggleCourseMinimized}
+          scrollToCourseRequest={scrollToCourseRequest}
+          onScrollToCourseHandled={clearScrollToCourseRequest}
         />
       </section>
 
