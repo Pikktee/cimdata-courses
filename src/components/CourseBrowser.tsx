@@ -48,6 +48,12 @@ function parseDurationDays(durationText: string | null): number {
   return 14;
 }
 
+function parseDurationSlots(durationText: string | null): number {
+  if (!durationText) return 1;
+  if (/\b4\b/.test(durationText)) return 2;
+  return 1;
+}
+
 function formatDateTime(value: string | null): string {
   if (!value) return "k. A.";
   return new Date(value).toLocaleString("de-DE");
@@ -156,21 +162,24 @@ export function CourseBrowser({
   }, [coursesById, selectedCoursesByDate]);
 
   const gapHints = useMemo(() => {
-    const gaps: { from: string; to: string; gapDays: number }[] = [];
+    const gaps: { from: string; to: string; gapSlots: number }[] = [];
 
     for (let i = 1; i < plannedEntries.length; i += 1) {
       const previousEntry = plannedEntries[i - 1];
       const currentEntry = plannedEntries[i];
       const previousStart = parseIsoDate(previousEntry.startDate);
       const currentStart = parseIsoDate(currentEntry.startDate);
-      const previousDurationDays = parseDurationDays(previousEntry.course.durationText);
-      const gapDays = Math.round((currentStart.getTime() - previousStart.getTime()) / MS_PER_DAY) - previousDurationDays;
+      const previousSlotIndex = Math.floor(previousStart.getTime() / MS_PER_DAY / 14);
+      const currentSlotIndex = Math.floor(currentStart.getTime() / MS_PER_DAY / 14);
+      const slotDistance = currentSlotIndex - previousSlotIndex;
+      const coveredSlots = parseDurationSlots(previousEntry.course.durationText);
+      const gapSlots = slotDistance - coveredSlots;
 
-      if (gapDays > 0) {
+      if (gapSlots > 0) {
         gaps.push({
           from: previousEntry.startDate,
           to: currentEntry.startDate,
-          gapDays
+          gapSlots
         });
       }
     }
@@ -316,8 +325,8 @@ export function CourseBrowser({
                   <ul className="plan-gap-list">
                     {gapHints.map((gap) => (
                       <li key={`${gap.from}-${gap.to}`}>
-                        {formatDate(gap.from)} — {formatDate(gap.to)}: {gap.gapDays}{" "}
-                        {gap.gapDays === 1 ? "Tag" : "Tage"} frei
+                        {formatDate(gap.from)} — {formatDate(gap.to)}: {gap.gapSlots}{" "}
+                        {gap.gapSlots === 1 ? "14-Tage-Zeitraum frei" : "14-Tage-Zeiträume frei"}
                       </li>
                     ))}
                   </ul>
