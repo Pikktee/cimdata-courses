@@ -55,7 +55,9 @@ function parseIsoDate(iso: string): Date {
 }
 
 function parseDurationDays(durationText: string | null): number {
-  if (!durationText) return 14;
+  // Konservativer Default: unbekannte Dauer als 4 Wochen behandeln,
+  // damit Überlappungen nicht versehentlich erlaubt werden.
+  if (!durationText) return 28;
   const text = durationText.toLowerCase();
   const unitMatches = Array.from(
     text.matchAll(/(\d+(?:[.,]\d+)?)\s*(tag|tage|woche|wochen|monat|monate)\b/g)
@@ -78,7 +80,7 @@ function parseDurationDays(durationText: string | null): number {
   const numberMatches = Array.from(text.matchAll(/(\d+(?:[.,]\d+)?)/g))
     .map((match) => Number(match[1].replace(",", ".")))
     .filter((value) => Number.isFinite(value) && value > 0);
-  if (numberMatches.length === 0) return 14;
+  if (numberMatches.length === 0) return 28;
 
   // Fallback ohne Einheit: numerischen Wert als Wochen interpretieren.
   return Math.round(Math.max(...numberMatches) * 7);
