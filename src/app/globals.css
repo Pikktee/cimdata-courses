@@ -1338,18 +1338,22 @@ body {
   padding-bottom: 0.15rem;
 }
 
-/* Aktiver Termin: farbig unterlegt über volle Breite */
+/* Aktiver Termin: subtile Vollbreiten-Markierung ohne Karten-Look */
 .plan-course-item--active-date {
   background: linear-gradient(
     90deg,
-    rgba(79, 70, 229, 0.16) 0%,
-    rgba(79, 70, 229, 0.08) 52%,
-    rgba(79, 70, 229, 0.04) 100%
+    rgba(79, 70, 229, 0.1) 0%,
+    rgba(79, 70, 229, 0.05) 58%,
+    rgba(79, 70, 229, 0.02) 100%
   );
-  border-radius: var(--radius-sm);
-  box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.2);
-  padding: 0.22rem 0.22rem;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.22rem 0;
   margin: 0;
+}
+
+.plan-course-item--active-date::before {
+  opacity: 1;
 }
 
 .plan-course-date {
@@ -1388,6 +1392,7 @@ body {
 
 .plan-course-item--active-date .plan-course-entry-link {
   color: #312e81;
+  border-radius: 0;
 }
 
 .plan-course-item--active-date .plan-course-entry-link:hover {
