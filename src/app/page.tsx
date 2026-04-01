@@ -1,4 +1,5 @@
 import { CourseBrowser } from "@/components/CourseBrowser";
+import { PlanShareButton } from "@/components/PlanShareButton";
 import {
   getCoursesByStartDate,
   getLatestRefreshRun,
@@ -19,9 +20,12 @@ export default async function HomePage() {
       <header className="hero">
         <div className="hero-topline">
           <p className="eyebrow">Weiterbildung planen</p>
-          <div className="hero-badges" aria-label="Übersicht">
-            <span>{initialData.courses.length} Kurse</span>
-            <span>{initialData.availableStartDates.length} Termine</span>
+          <div className="hero-actions">
+            <div className="hero-badges" aria-label="Übersicht">
+              <span>{initialData.courses.length} Kurse</span>
+              <span>{initialData.availableStartDates.length} Termine</span>
+            </div>
+            <PlanShareButton />
           </div>
         </div>
 

@@ -136,6 +136,14 @@ body {
   gap: 0.8rem;
 }
 
+.hero-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .eyebrow {
   margin: 0;
   font-size: 0.72rem;
@@ -149,6 +157,42 @@ body {
   display: inline-flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+}
+
+.hero-share-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.35rem;
+}
+
+.hero-share-btn {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.93);
+  border-radius: 999px;
+  padding: 0.2rem 0.58rem;
+  font-size: 0.72rem;
+  font-weight: 680;
+  line-height: 1.2;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background-color var(--duration) var(--ease), border-color var(--duration) var(--ease);
+}
+
+.hero-share-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.48);
+}
+
+.hero-share-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.65);
+  outline-offset: 2px;
+}
+
+.hero-share-note {
+  font-size: 0.69rem;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .hero-badges span {
@@ -213,43 +257,6 @@ body {
 .toolbar {
   display: grid;
   gap: 0.75rem;
-}
-
-.planner-top-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin: -0.1rem 0 0.25rem;
-  min-height: 1.5rem;
-}
-
-.planner-permalink-btn {
-  border: 1px solid rgba(99, 102, 241, 0.24);
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--primary-dark);
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 650;
-  padding: 0.18rem 0.58rem;
-  line-height: 1.2;
-  cursor: pointer;
-  transition: background-color var(--duration) var(--ease), border-color var(--duration) var(--ease);
-}
-
-.planner-permalink-btn:hover {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.34);
-}
-
-.planner-permalink-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--ring);
-}
-
-.planner-permalink-notice {
-  font-size: 0.72rem;
-  color: var(--text-muted);
 }
 
 .planner-layout {
@@ -1688,9 +1695,9 @@ body {
     display: block;
   }
 
-  .planner-top-actions {
+  .hero-actions {
+    width: 100%;
     justify-content: flex-start;
-    margin-top: 0;
   }
 
   .planner-layout {

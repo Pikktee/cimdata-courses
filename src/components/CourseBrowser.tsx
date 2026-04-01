@@ -161,7 +161,6 @@ export function CourseBrowser({
     Record<string, "add" | "replace" | "removing">
   >({});
   const [planPendingRemoval, setPlanPendingRemoval] = useState<Record<string, boolean>>({});
-  const [permalinkNotice, setPermalinkNotice] = useState<string | null>(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
 
   const handleDateChange = useCallback((value: string) => {
@@ -240,10 +239,27 @@ export function CourseBrowser({
   }, [planActionNotice]);
 
   useEffect(() => {
-    if (!permalinkNotice) return;
-    const timer = window.setTimeout(() => setPermalinkNotice(null), 2600);
-    return () => clearTimeout(timer);
-  }, [permalinkNotice]);
+    if (!hasLoadedLocalPlan) return;
+    const planParam = encodePlanParam(selectedCoursesByDate);
+    const minimizedParam = encodeMinimizedParam(minimizedCourseIds);
+    const url = new URL(window.location.href);
+    if (planParam) {
+      url.searchParams.set(PERMALINK_PLAN_PARAM, planParam);
+    } else {
+      url.searchParams.delete(PERMALINK_PLAN_PARAM);
+    }
+    if (minimizedParam) {
+      url.searchParams.set(PERMALINK_MINIMIZED_PARAM, minimizedParam);
+    } else {
+      url.searchParams.delete(PERMALINK_MINIMIZED_PARAM);
+    }
+    if (selectedDate !== "all") {
+      url.searchParams.set(PERMALINK_DATE_PARAM, selectedDate);
+    } else {
+      url.searchParams.delete(PERMALINK_DATE_PARAM);
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, [hasLoadedLocalPlan, minimizedCourseIds, selectedCoursesByDate, selectedDate]);
 
   const minimizedCourseIdSet = useMemo(() => new Set(minimizedCourseIds), [minimizedCourseIds]);
 
@@ -440,36 +456,6 @@ export function CourseBrowser({
     });
   }, [router]);
 
-  const handleCreatePermalink = useCallback(async () => {
-    const planParam = encodePlanParam(selectedCoursesByDate);
-    const minimizedParam = encodeMinimizedParam(minimizedCourseIds);
-    const url = new URL(window.location.href);
-    if (planParam) {
-      url.searchParams.set(PERMALINK_PLAN_PARAM, planParam);
-    } else {
-      url.searchParams.delete(PERMALINK_PLAN_PARAM);
-    }
-    if (minimizedParam) {
-      url.searchParams.set(PERMALINK_MINIMIZED_PARAM, minimizedParam);
-    } else {
-      url.searchParams.delete(PERMALINK_MINIMIZED_PARAM);
-    }
-    if (selectedDate !== "all") {
-      url.searchParams.set(PERMALINK_DATE_PARAM, selectedDate);
-    } else {
-      url.searchParams.delete(PERMALINK_DATE_PARAM);
-    }
-
-    window.history.replaceState({}, "", url.toString());
-
-    try {
-      await navigator.clipboard.writeText(url.toString());
-      setPermalinkNotice("Permalink kopiert.");
-    } catch {
-      setPermalinkNotice("Permalink erstellt. Bitte URL aus der Adresszeile kopieren.");
-    }
-  }, [minimizedCourseIds, selectedCoursesByDate, selectedDate]);
-
   const latestRefresh = initial.latestRefresh;
   const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
   const latestStatusText = latestRefresh
@@ -492,17 +478,6 @@ export function CourseBrowser({
 
   return (
     <>
-      <div className="planner-top-actions" aria-live="polite">
-        <button
-          type="button"
-          className="planner-permalink-btn"
-          onClick={handleCreatePermalink}
-          title="Permalink zu den aktuellen Auswahloptionen erstellen"
-        >
-          Permalink
-        </button>
-        {permalinkNotice && <span className="planner-permalink-notice">{permalinkNotice}</span>}
-      </div>
       <section className="planner-layout">
         <aside className="planner-sidebar">
           <section className="toolbar">
