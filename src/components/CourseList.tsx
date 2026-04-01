@@ -107,7 +107,10 @@ export function CourseList({
               : `Kurs für ${formattedActiveDate} in den Studienplan aufnehmen.`;
 
         return (
-          <article className="course-card" key={course.id}>
+          <article
+            className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}`}
+            key={course.id}
+          >
             <div
               className="course-plan-tooltip-wrap has-tooltip course-card-action"
               data-tooltip={actionTooltip}

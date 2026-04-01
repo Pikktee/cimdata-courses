@@ -419,16 +419,38 @@ body {
   transition:
     transform var(--duration) var(--ease),
     box-shadow var(--duration) var(--ease),
-    border-color var(--duration) var(--ease);
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+.course-card-in-plan {
+  background: linear-gradient(
+    145deg,
+    rgba(99, 102, 241, 0.11) 0%,
+    rgba(99, 102, 241, 0.04) 55%,
+    var(--surface) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.38);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.14),
+    var(--shadow-xs);
 }
 
 .course-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   border-color: var(--primary-border);
+}
+
+.course-card-in-plan:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.24),
+    var(--shadow-md);
 }
 
 .course-card h3 {
