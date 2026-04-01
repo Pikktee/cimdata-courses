@@ -21,12 +21,16 @@ export function PlanShareButton() {
   };
 
   return (
-    <div className="hero-share-wrap" aria-live="polite">
+    <div
+      className="hero-share-wrap has-tooltip"
+      data-tooltip="Erstellt einen teilbaren Link mit deinen aktuellen Einstellungen: Startdatum, Studienplan und ausgeblendete Kurse."
+      aria-live="polite"
+    >
       <button
         type="button"
         className="hero-share-btn"
         onClick={handleShare}
-        title="Aktuellen Plan teilen"
+        title="Aktuellen Plan teilen (inkl. ausgewählter Optionen)"
       >
         Plan teilen
       </button>

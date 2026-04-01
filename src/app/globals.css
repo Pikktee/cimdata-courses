@@ -195,6 +195,26 @@ body {
   color: rgba(255, 255, 255, 0.72);
 }
 
+.hero-share-wrap.has-tooltip {
+  position: relative;
+}
+
+.hero-share-wrap.has-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.42rem);
+  width: min(290px, 90vw);
+  background: rgba(15, 23, 42, 0.96);
+  color: #f8fafc;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.62rem;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  box-shadow: var(--shadow-lg);
+  z-index: 3;
+}
+
 .hero-badges span {
   display: inline-flex;
   align-items: center;
