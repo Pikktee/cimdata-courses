@@ -655,44 +655,15 @@ export function CourseBrowser({
                           : ""
                       }${isActiveStartSlot ? " plan-course-item--active-date" : ""}`}
                     >
-                      <div className="plan-course-item-head">
-                        <button
-                          type="button"
-                          className="plan-course-date-link"
-                          onClick={() =>
-                            handleJumpToCourseFromPlan(entry.startDate, entry.course.id)
-                          }
-                          aria-label={`Startdatum ${formatDate(entry.startDate)} wählen und zur Kurskarte scrollen`}
-                        >
-                          {formatDate(entry.startDate)}
-                        </button>
-                        <button
-                          type="button"
-                          className="plan-remove-icon-btn"
-                          aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
-                          title="Entfernen"
-                          disabled={Boolean(planPendingRemoval[entry.startDate])}
-                          onClick={() => openRemoveCourseDialog(entry.startDate)}
-                        >
-                          <svg viewBox="0 0 24 24" aria-hidden>
-                            <path
-                              d="M18 6 6 18M6 6l12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </button>
-                      </div>
                       <button
                         type="button"
-                        className="plan-course-jump"
+                        className="plan-course-entry-link"
                         onClick={() =>
                           handleJumpToCourseFromPlan(entry.startDate, entry.course.id)
                         }
-                        aria-label={`Zur Kurskarte scrollen: ${entry.course.title}`}
+                        aria-label={`Startdatum ${formatDate(entry.startDate)} wählen und zur Kurskarte scrollen: ${entry.course.title}`}
                       >
+                        <span className="plan-course-date">{formatDate(entry.startDate)}</span>
                         <span className="plan-course-title">{entry.course.title}</span>
                         {entry.course.scheduleText ? (
                           <span className="plan-course-detail">{entry.course.scheduleText}</span>
@@ -703,6 +674,24 @@ export function CourseBrowser({
                         <span className="plan-course-duration">
                           Dauer: {entry.course.durationText ?? "k. A."}
                         </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="plan-remove-icon-btn"
+                        aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
+                        title="Entfernen"
+                        disabled={Boolean(planPendingRemoval[entry.startDate])}
+                        onClick={() => openRemoveCourseDialog(entry.startDate)}
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden>
+                          <path
+                            d="M18 6 6 18M6 6l12 12"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
                       </button>
                     </li>
                     );
