@@ -830,17 +830,9 @@ body {
 .plan-panel-body {
   display: grid;
   gap: 0.42rem;
-  min-height: 0;
-  /* Nur Inhalt scrollt; „Plan zurücksetzen“ liegt außerhalb (direkt unter der Box). */
-  max-height: min(70vh, 34rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.plan-panel-body::-webkit-scrollbar {
-  display: none;
+  min-height: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .plan-panel > .plan-clear-btn {
@@ -1440,17 +1432,6 @@ body {
   .planner-sidebar {
     position: static;
     top: auto;
-  }
-
-  .plan-panel-body {
-    max-height: none;
-    overflow-y: visible;
-    scrollbar-width: auto;
-    -ms-overflow-style: auto;
-  }
-
-  .plan-panel-body::-webkit-scrollbar {
-    display: revert;
   }
 
   .course-grid {
