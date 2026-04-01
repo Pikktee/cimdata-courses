@@ -48,6 +48,29 @@ function parseDurationDays(durationText: string | null): number {
   return 14;
 }
 
+function normalizeCourseTitle(title: string): string {
+  return title.trim().toLowerCase();
+}
+
+/** Gleicher Kurs (ID oder Titel) darf nur einmal im Plan vorkommen — Vergleich ohne aktuellen Termin-Slot. */
+function isCourseAlreadyPlannedElsewhere(
+  plan: Record<string, number>,
+  coursesById: Map<number, CourseItem>,
+  courseId: number,
+  activeStartDate: string
+): boolean {
+  const course = coursesById.get(courseId);
+  if (!course) return false;
+  const titleNorm = normalizeCourseTitle(course.title);
+  return Object.entries(plan).some(([startDate, id]) => {
+    if (startDate === activeStartDate) return false;
+    if (id === courseId) return true;
+    const other = coursesById.get(id);
+    if (!other) return false;
+    return normalizeCourseTitle(other.title) === titleNorm;
+  });
+}
+
 function formatDateTime(value: string | null): string {
   if (!value) return "k. A.";
   return new Date(value).toLocaleString("de-DE");
@@ -89,14 +112,13 @@ export function CourseBrowser({
   const [selectedCoursesByDate, setSelectedCoursesByDate] = useState<Record<string, number>>({});
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
   const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
+  const [planActionNotice, setPlanActionNotice] = useState<string | null>(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
 
-  const handleDateChange = useCallback(
-    (value: string) => {
-      setSelectedDate(value);
-    },
-    []
-  );
+  const handleDateChange = useCallback((value: string) => {
+    setSelectedDate(value);
+    setPlanActionNotice(null);
+  }, []);
 
   const coursesById = useMemo(() => {
     return new Map(initial.courses.map((course) => [course.id, course]));
@@ -137,6 +159,12 @@ export function CourseBrowser({
       })
     );
   }, [hasLoadedLocalPlan, selectedCoursesByDate]);
+
+  useEffect(() => {
+    if (!planActionNotice) return;
+    const timer = window.setTimeout(() => setPlanActionNotice(null), 5000);
+    return () => clearTimeout(timer);
+  }, [planActionNotice]);
 
   const filteredCourses = useMemo(() => {
     return initial.courses.filter(
@@ -183,12 +211,30 @@ export function CourseBrowser({
   const handleAssignCourse = useCallback(
     (courseId: number) => {
       if (selectedDate === "all") return;
+      if (isCourseAlreadyPlannedElsewhere(selectedCoursesByDate, coursesById, courseId, selectedDate)) {
+        const c = coursesById.get(courseId);
+        setPlanActionNotice(
+          c
+            ? `„${c.title}“ ist bereits für einen anderen Termin im Studienplan.`
+            : "Dieser Kurs ist bereits für einen anderen Termin im Studienplan."
+        );
+        return;
+      }
+      setPlanActionNotice(null);
       setSelectedCoursesByDate((current) => ({
         ...current,
         [selectedDate]: courseId
       }));
     },
-    [selectedDate]
+    [selectedDate, selectedCoursesByDate, coursesById]
+  );
+
+  const isCourseBlockedDuplicate = useCallback(
+    (courseId: number) => {
+      if (selectedDate === "all") return false;
+      return isCourseAlreadyPlannedElsewhere(selectedCoursesByDate, coursesById, courseId, selectedDate);
+    },
+    [selectedDate, selectedCoursesByDate, coursesById]
   );
 
   const handleRemoveCourse = useCallback((startDate: string) => {
@@ -315,6 +361,12 @@ export function CourseBrowser({
               </span>
             </div>
 
+            {planActionNotice && (
+              <p className="plan-action-notice" role="status">
+                {planActionNotice}
+              </p>
+            )}
+
             <div className="plan-panel-body">
             {plannedEntries.length === 0 ? (
               <p className="plan-empty">
@@ -412,6 +464,7 @@ export function CourseBrowser({
           selectedByDate={selectedCoursesByDate}
           onAssignCourse={handleAssignCourse}
           onRemoveCourse={handleRemoveCourse}
+          isCourseBlocked={isCourseBlockedDuplicate}
         />
       </section>
 

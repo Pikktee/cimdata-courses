@@ -16,6 +16,8 @@ type CourseListProps = {
   selectedByDate: Record<string, number>;
   onAssignCourse: (courseId: number) => void;
   onRemoveCourse: (startDate: string) => void;
+  /** Kurs ist bereits unter anderem Termin im Plan (gleicher Titel / gleiche ID). */
+  isCourseBlocked?: (courseId: number) => boolean;
 };
 
 function formatDate(isoDate: string): string {
@@ -67,7 +69,8 @@ export function CourseList({
   activeDate,
   selectedByDate,
   onAssignCourse,
-  onRemoveCourse
+  onRemoveCourse,
+  isCourseBlocked
 }: CourseListProps) {
   const isDateSelected = activeDate !== "all";
 
@@ -90,21 +93,29 @@ export function CourseList({
         const assignedCourseId = isDateSelected ? selectedByDate[activeDate] : undefined;
         const isAssigned = assignedCourseId === course.id;
         const isReplacing = typeof assignedCourseId === "number" && assignedCourseId !== course.id;
+        const isDuplicateElsewhere = Boolean(isCourseBlocked?.(course.id));
+        const actionBlocked = isDuplicateElsewhere && !isAssigned;
         const formattedActiveDate = isDateSelected ? formatDate(activeDate) : null;
         const actionLabel = !isDateSelected
           ? "Startdatum wählen"
           : isAssigned
             ? "Bereits im Studienplan"
-            : isReplacing
-              ? "Für Termin ersetzen"
-              : "In Studienplan aufnehmen";
+            : actionBlocked
+              ? "Bereits anderer Termin im Studienplan"
+              : isReplacing
+                ? "Für Termin ersetzen"
+                : "In Studienplan aufnehmen";
         const actionTooltip = !isDateSelected
           ? "Bitte zuerst in der linken Spalte ein konkretes Startdatum wählen."
           : isAssigned
             ? `Kurs am ${formattedActiveDate} aus dem Studienplan entfernen.`
-            : isReplacing
-              ? `Kurs für ${formattedActiveDate} im Studienplan ersetzen.`
-              : `Kurs für ${formattedActiveDate} in den Studienplan aufnehmen.`;
+            : actionBlocked
+              ? "Dieser Kurs ist bereits für einen anderen Termin im Studienplan. Entferne den bestehenden Eintrag oder wähle einen anderen Kurs."
+              : isReplacing
+                ? `Kurs für ${formattedActiveDate} im Studienplan ersetzen.`
+                : `Kurs für ${formattedActiveDate} in den Studienplan aufnehmen.`;
+        const showRemove = isAssigned;
+        const showReplace = isReplacing && !actionBlocked;
 
         return (
           <article
@@ -118,17 +129,19 @@ export function CourseList({
               <button
                 type="button"
                 className={`course-plan-icon-btn ${
-                  isAssigned
+                  showRemove
                     ? "course-plan-icon-btn-remove"
-                    : isReplacing
+                    : showReplace
                       ? "course-plan-icon-btn-replace"
                       : "course-plan-icon-btn-add"
                 }`}
-                disabled={!isDateSelected}
-                onClick={() => (isAssigned ? onRemoveCourse(activeDate) : onAssignCourse(course.id))}
+                disabled={!isDateSelected || actionBlocked}
+                onClick={() =>
+                  showRemove ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
+                }
                 aria-label={actionLabel}
               >
-                {isAssigned ? (
+                {showRemove ? (
                   <svg viewBox="0 0 24 24" aria-hidden>
                     <path
                       d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
@@ -139,7 +152,7 @@ export function CourseList({
                       strokeLinejoin="round"
                     />
                   </svg>
-                ) : isReplacing ? (
+                ) : showReplace ? (
                   <svg viewBox="0 0 24 24" aria-hidden>
                     <path
                       d="M7 7h10v10M17 7l-3 3M7 17l3-3"

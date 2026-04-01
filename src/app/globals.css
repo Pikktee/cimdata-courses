@@ -738,6 +738,17 @@ body {
   margin: 0;
 }
 
+.plan-action-notice {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #92400e;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+}
+
 .plan-panel-body {
   display: grid;
   gap: 0.42rem;
