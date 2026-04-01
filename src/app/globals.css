@@ -56,6 +56,26 @@
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --duration: 160ms;
 
+  /* ─ Studienplan / Kurskarten (einheitlicher Teal-Akzent) ─ */
+  --plan-accent: #0d9488;
+  --plan-accent-hover: #0f766e;
+  --plan-accent-soft: #2dd4bf;
+  --plan-accent-bg: rgba(13, 148, 136, 0.11);
+  --plan-accent-bg-hover: rgba(13, 148, 136, 0.16);
+  --plan-accent-border: rgba(13, 148, 136, 0.32);
+  --plan-accent-border-soft: rgba(13, 148, 136, 0.17);
+  --plan-accent-ring: 0 0 0 3px rgba(13, 148, 136, 0.22);
+  --plan-replace: #0e7490;
+  --plan-replace-bg: rgba(14, 116, 144, 0.1);
+  --plan-replace-bg-hover: rgba(14, 116, 144, 0.16);
+  --plan-replace-border: rgba(14, 116, 144, 0.34);
+  --plan-replace-ring: 0 0 0 3px rgba(14, 116, 144, 0.2);
+  --plan-remove-fg: #475569;
+  --plan-remove-bg: rgba(71, 85, 105, 0.09);
+  --plan-remove-bg-hover: rgba(71, 85, 105, 0.15);
+  --plan-remove-border: rgba(71, 85, 105, 0.3);
+  --plan-remove-ring: 0 0 0 3px rgba(71, 85, 105, 0.18);
+
   /* ─ Tooltips (shared) ─ */
   --tooltip-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --tooltip-show-delay: 0.42s;
@@ -438,6 +458,42 @@ body {
   border-bottom: 1px solid rgba(99, 102, 241, 0.1);
 }
 
+/* Studienplan-Panel: gleiche Farbfamilie wie Plan-Aktionen auf den Kurskarten */
+.plan-panel.control-card--sidebar {
+  border-color: var(--plan-accent-border-soft);
+  background-image: linear-gradient(
+    168deg,
+    rgba(204, 251, 241, 0.5) 0%,
+    rgba(255, 255, 255, 1) 46%,
+    #ffffff 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.95) inset,
+    0 1px 0 rgba(13, 148, 136, 0.07) inset,
+    0 10px 28px -10px rgba(13, 148, 136, 0.14),
+    0 4px 14px -4px rgba(15, 23, 42, 0.08);
+}
+
+.plan-panel.control-card--sidebar::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(13, 148, 136, 0.75),
+    rgba(45, 212, 191, 0.28)
+  );
+}
+
+.plan-panel.control-card--sidebar::after {
+  background: radial-gradient(
+    circle,
+    rgba(13, 148, 136, 0.13) 0%,
+    rgba(13, 148, 136, 0) 70%
+  );
+}
+
+.plan-panel.control-card--sidebar .control-head {
+  border-bottom-color: rgba(13, 148, 136, 0.14);
+}
+
 .control-head {
   display: flex;
   align-items: center;
@@ -602,13 +658,13 @@ body {
 .course-card-in-plan {
   background: linear-gradient(
     145deg,
-    rgba(99, 102, 241, 0.11) 0%,
-    rgba(99, 102, 241, 0.04) 55%,
+    rgba(13, 148, 136, 0.12) 0%,
+    rgba(13, 148, 136, 0.04) 52%,
     var(--surface) 100%
   );
-  border-color: rgba(99, 102, 241, 0.38);
+  border-color: var(--plan-accent-border);
   box-shadow:
-    0 0 0 1px rgba(99, 102, 241, 0.14),
+    0 0 0 1px rgba(13, 148, 136, 0.12),
     var(--shadow-xs);
 }
 
@@ -620,9 +676,9 @@ body {
 
 .course-card-in-plan:hover {
   transform: translateY(-3px);
-  border-color: var(--primary);
+  border-color: var(--plan-accent-hover);
   box-shadow:
-    0 0 0 1px rgba(99, 102, 241, 0.24),
+    0 0 0 1px rgba(13, 148, 136, 0.22),
     var(--shadow-md);
 }
 
@@ -828,9 +884,9 @@ body {
 .course-plan-icon-btn {
   width: 2rem;
   height: 2rem;
-  border: 1px solid var(--primary-border);
-  background: var(--primary-bg);
-  color: var(--primary);
+  border: 1px solid var(--plan-accent-border-soft);
+  background: var(--plan-accent-bg);
+  color: var(--plan-accent);
   border-radius: var(--radius-xs);
   padding: 0;
   cursor: pointer;
@@ -840,6 +896,7 @@ body {
   transition:
     background-color var(--duration) var(--ease),
     border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
     transform var(--duration) var(--ease),
     box-shadow var(--duration) var(--ease);
 }
@@ -968,7 +1025,7 @@ body {
 .minimized-restore-btn {
   border: none;
   background: transparent;
-  color: var(--primary);
+  color: var(--plan-accent);
   border-radius: 2px;
   font-size: 0.71rem;
   font-weight: 650;
@@ -981,12 +1038,14 @@ body {
 }
 
 .minimized-restore-btn:hover {
-  text-decoration-color: var(--primary-border);
+  color: var(--plan-accent-hover);
+  text-decoration-color: var(--plan-accent-border-soft);
 }
 
 .course-plan-icon-btn:hover:not(:disabled) {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.28);
+  background: var(--plan-accent-bg-hover);
+  border-color: var(--plan-accent-border);
+  color: var(--plan-accent-hover);
   transform: scale(1.04);
 }
 
@@ -996,25 +1055,27 @@ body {
 }
 
 .course-plan-icon-btn-replace {
-  border-color: var(--warning-border);
-  background: var(--warning-bg);
-  color: #b45309;
+  border-color: var(--plan-replace-border);
+  background: var(--plan-replace-bg);
+  color: var(--plan-replace);
 }
 
 .course-plan-icon-btn-replace:hover:not(:disabled) {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.35);
+  background: var(--plan-replace-bg-hover);
+  border-color: rgba(14, 116, 144, 0.42);
+  color: #0c5c72;
 }
 
 .course-plan-icon-btn-remove {
-  border-color: var(--danger-border);
-  background: var(--danger-bg);
-  color: var(--danger);
+  border-color: var(--plan-remove-border);
+  background: var(--plan-remove-bg);
+  color: var(--plan-remove-fg);
 }
 
 .course-plan-icon-btn-remove:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.28);
+  background: var(--plan-remove-bg-hover);
+  border-color: rgba(71, 85, 105, 0.4);
+  color: #334155;
 }
 
 .course-plan-icon-btn:disabled {
@@ -1027,7 +1088,15 @@ body {
 
 .course-plan-icon-btn:focus-visible {
   outline: none;
-  box-shadow: var(--ring);
+  box-shadow: var(--plan-accent-ring);
+}
+
+.course-plan-icon-btn-replace:focus-visible {
+  box-shadow: var(--plan-replace-ring);
+}
+
+.course-plan-icon-btn-remove:focus-visible {
+  box-shadow: var(--plan-remove-ring);
 }
 
 /* ─ Card Footer ─ */
@@ -1146,8 +1215,8 @@ body {
 }
 
 .plan-clear-btn:hover {
-  color: var(--primary);
-  text-decoration-color: var(--primary-border);
+  color: var(--plan-accent-hover);
+  text-decoration-color: var(--plan-accent-border-soft);
 }
 
 .plan-empty {
@@ -1259,7 +1328,7 @@ body {
 
 .plan-course-date {
   margin: 0;
-  color: var(--primary);
+  color: var(--plan-accent);
   font-size: 0.74rem;
   font-weight: 720;
   letter-spacing: 0.01em;
@@ -1270,7 +1339,7 @@ body {
   background: transparent;
   padding: 0;
   margin: 0;
-  color: var(--primary);
+  color: var(--plan-accent);
   font-size: 0.7rem;
   font-weight: 650;
   letter-spacing: 0.01em;
@@ -1282,13 +1351,13 @@ body {
 }
 
 .plan-course-date-link:hover {
-  color: var(--primary-hover);
-  text-decoration-color: var(--primary-border);
+  color: var(--plan-accent-hover);
+  text-decoration-color: var(--plan-accent-border-soft);
 }
 
 .plan-course-date-link:focus-visible {
   outline: none;
-  box-shadow: var(--ring);
+  box-shadow: var(--plan-accent-ring);
   border-radius: 2px;
 }
 
@@ -1309,12 +1378,12 @@ body {
 }
 
 .plan-course-jump:hover {
-  background: rgba(99, 102, 241, 0.06);
+  background: rgba(13, 148, 136, 0.07);
 }
 
 .plan-course-jump:focus-visible {
   outline: none;
-  box-shadow: var(--ring);
+  box-shadow: var(--plan-accent-ring);
 }
 
 .plan-course-area {
@@ -1352,10 +1421,14 @@ body {
   color: var(--text-muted);
 }
 
-.plan-remove-icon-btn:focus-visible,
+.plan-remove-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--plan-remove-ring);
+}
+
 .plan-clear-btn:focus-visible {
   outline: none;
-  box-shadow: var(--ring);
+  box-shadow: var(--plan-accent-ring);
 }
 
 .plan-remove-icon-btn {
@@ -1383,8 +1456,8 @@ body {
 
 .plan-remove-icon-btn:hover {
   transform: none;
-  color: var(--danger);
-  background: var(--danger-bg);
+  color: var(--plan-remove-fg);
+  background: var(--plan-remove-bg-hover);
 }
 
 .plan-remove-icon-btn:disabled {
@@ -1409,20 +1482,20 @@ body {
 
 @keyframes plan-item-replace {
   0% {
-    background: rgba(99, 102, 241, 0.02);
-    box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0);
+    background: rgba(13, 148, 136, 0.03);
+    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0);
   }
   40% {
-    background: rgba(99, 102, 241, 0.08);
-    box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+    background: rgba(13, 148, 136, 0.09);
+    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.22);
   }
   72% {
-    background: rgba(99, 102, 241, 0.03);
-    box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.1);
+    background: rgba(13, 148, 136, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.11);
   }
   100% {
     background: transparent;
-    box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0);
+    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0);
   }
 }
 
