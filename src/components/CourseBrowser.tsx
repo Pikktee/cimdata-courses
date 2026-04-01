@@ -284,7 +284,6 @@ export function CourseBrowser({
               options={initial.availableStartDates}
               value={selectedDate}
               onChange={handleDateChange}
-              courseCount={filteredCourses.length}
               disabled={false}
             />
           </section>

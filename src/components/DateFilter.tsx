@@ -2,7 +2,6 @@ type DateFilterProps = {
   options: string[];
   value: string;
   onChange: (value: string) => void;
-  courseCount: number;
   disabled?: boolean;
 };
 
@@ -16,18 +15,12 @@ export function DateFilter({
   options,
   value,
   onChange,
-  courseCount,
   disabled = false
 }: DateFilterProps) {
-  const countLabel = courseCount === 1 ? "Kurs" : "Kurse";
-
   return (
     <div className="control-card">
       <div className="control-head">
         <span className="control-label">Startdatum</span>
-        <span className="control-count" aria-live="polite">
-          {courseCount} {countLabel}
-        </span>
       </div>
 
       <label htmlFor="startdate" className="sr-only">
