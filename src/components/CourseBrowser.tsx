@@ -567,7 +567,9 @@ export function CourseBrowser({
                           planEntryEffects[entry.startDate]
                             ? ` plan-course-item-${planEntryEffects[entry.startDate]}`
                             : ""
-                        }${isActiveStartSlot ? " plan-course-item--active-date" : ""}`}
+                        }${isActiveStartSlot ? " plan-course-item--active-date" : ""}${
+                          gapAfter ? " plan-course-item--with-gap-after" : ""
+                        }`}
                       >
                         <button
                           type="button"
@@ -588,8 +590,11 @@ export function CourseBrowser({
                         </button>
                       </li>
                       {gapAfter ? (
-                        <li className="plan-gap-item" aria-label={`Lücke von ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)}`}>
-                          <span className="plan-gap-chip">
+                        <li
+                          className="plan-gap-item"
+                          aria-label={`Lücke von ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)}`}
+                        >
+                          <span className="plan-gap-text">
                             Lücke: {formatDate(gapAfter.from)} - {formatDate(gapAfter.to)}
                           </span>
                         </li>
