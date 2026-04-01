@@ -1273,6 +1273,24 @@ body {
   transition: color var(--duration) var(--ease);
 }
 
+.plan-course-item::before {
+  content: "";
+  position: absolute;
+  left: -0.18rem;
+  top: 0.34rem;
+  bottom: 0.34rem;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--plan-accent-soft) 0%, var(--plan-accent) 100%);
+  opacity: 0;
+  transition: opacity var(--duration) var(--ease);
+}
+
+.plan-course-item:hover::before,
+.plan-course-item:focus-within::before {
+  opacity: 0.95;
+}
+
 .plan-course-item-add {
   animation: plan-item-add 360ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -1290,21 +1308,18 @@ body {
   padding-bottom: 0.15rem;
 }
 
-/* Aktiver Termin: farbig markiert, bewusst ohne Box */
+/* Aktiver Termin: farbig unterlegt über volle Breite */
 .plan-course-item--active-date {
-  margin: 0.06rem 0;
-  border-bottom-color: transparent;
-}
-
-.plan-course-item--active-date::before {
-  content: "";
-  position: absolute;
-  left: -0.18rem;
-  top: 0.34rem;
-  bottom: 0.34rem;
-  width: 3px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, var(--plan-accent-soft) 0%, var(--plan-accent) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(79, 70, 229, 0.16) 0%,
+    rgba(79, 70, 229, 0.08) 52%,
+    rgba(79, 70, 229, 0.04) 100%
+  );
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.2);
+  padding: 0.22rem 0.22rem;
+  margin: 0;
 }
 
 .plan-course-date {
@@ -1333,7 +1348,7 @@ body {
 }
 
 .plan-course-entry-link:hover {
-  background: rgba(79, 70, 229, 0.06);
+  background: transparent;
 }
 
 .plan-course-entry-link:focus-visible {
@@ -1346,7 +1361,7 @@ body {
 }
 
 .plan-course-item--active-date .plan-course-entry-link:hover {
-  background: rgba(79, 70, 229, 0.1);
+  background: transparent;
 }
 
 .plan-course-title {
