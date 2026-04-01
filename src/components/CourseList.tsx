@@ -145,7 +145,7 @@ export function CourseList({
                 className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}`}
                 key={course.id}
               >
-                <div className="course-card-actions">
+                <div className="course-card-corner">
                   <div
                     className="course-plan-tooltip-wrap has-tooltip course-card-action-minimize"
                     data-tooltip="Kurs minimieren"
@@ -167,8 +167,48 @@ export function CourseList({
                       </svg>
                     </button>
                   </div>
+                </div>
+                <div className="course-meta-row">
+                  <p className="course-meta">{course.area ?? "Allgemein"}</p>
+                </div>
+                <h3>{course.title}</h3>
+                <dl className="course-details">
+                  <div className="course-detail-row">
+                    <dt>
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M12 6v6l4 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                      Dauer
+                    </dt>
+                    <dd>{course.durationText ?? "k. A."}</dd>
+                  </div>
+                  <div className="course-detail-row">
+                    <dt>
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M16 2v4M8 2v4M3 10h18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                      Termine
+                    </dt>
+                    <dd>
+                      <CourseStartDates startDates={course.startDates} />
+                    </dd>
+                  </div>
+                </dl>
+                <div className="course-card-footer">
+                  <a className="course-link" href={course.url} target="_blank" rel="noreferrer">
+                    <span className="course-link-text">Kurs bei CIMDATA</span>
+                    <span className="course-link-icon" aria-hidden>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <path d="M15 3h6v6" />
+                        <path d="M10 14 21 3" />
+                      </svg>
+                    </span>
+                  </a>
                   <div
-                    className="course-plan-tooltip-wrap has-tooltip course-card-action"
+                    className="course-plan-tooltip-wrap has-tooltip course-card-footer-actions"
                     data-tooltip={actionTooltip}
                   >
                     <button
@@ -223,46 +263,6 @@ export function CourseList({
                     </button>
                   </div>
                 </div>
-                <div className="course-meta-row">
-                  <p className="course-meta">{course.area ?? "Allgemein"}</p>
-                </div>
-                <h3>{course.title}</h3>
-                <dl className="course-details">
-                  <div className="course-detail-row">
-                    <dt>
-                      <svg viewBox="0 0 24 24" aria-hidden>
-                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M12 6v6l4 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                      Dauer
-                    </dt>
-                    <dd>{course.durationText ?? "k. A."}</dd>
-                  </div>
-                  <div className="course-detail-row">
-                    <dt>
-                      <svg viewBox="0 0 24 24" aria-hidden>
-                        <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M16 2v4M8 2v4M3 10h18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                      Termine
-                    </dt>
-                    <dd>
-                      <CourseStartDates startDates={course.startDates} />
-                    </dd>
-                  </div>
-                </dl>
-                <div className="course-card-footer">
-                  <a className="course-link" href={course.url} target="_blank" rel="noreferrer">
-                    <span className="course-link-text">Kurs bei CIMDATA</span>
-                    <span className="course-link-icon" aria-hidden>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <path d="M15 3h6v6" />
-                        <path d="M10 14 21 3" />
-                      </svg>
-                    </span>
-                  </a>
-                </div>
               </article>
             );
           })}
@@ -295,9 +295,6 @@ export function CourseList({
                   >
                     Einblenden
                   </button>
-                  <a className="minimized-course-link" href={course.url} target="_blank" rel="noreferrer">
-                    Öffnen
-                  </a>
                 </div>
               </li>
             ))}
