@@ -506,6 +506,60 @@ body {
   color: var(--text-secondary);
 }
 
+.course-dates-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.28rem;
+  max-width: 100%;
+}
+
+.course-dates-inline {
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.course-dates-details {
+  width: 100%;
+  border-radius: var(--radius-xs);
+}
+
+.course-dates-details summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.12rem;
+  transition: text-decoration-color var(--duration) var(--ease);
+}
+
+.course-dates-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.course-dates-details summary:hover {
+  text-decoration-color: var(--primary-border);
+}
+
+.course-dates-details summary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 2px;
+}
+
+.course-dates-overflow-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.05rem;
+  display: grid;
+  gap: 0.12rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
 /* ─ Card Action Buttons ─ */
 
 .course-plan-tooltip-wrap {

@@ -24,6 +24,44 @@ function formatDate(isoDate: string): string {
   return `${day}.${month}.${year}`;
 }
 
+const MAX_INLINE_START_DATES = 4;
+const PREVIEW_BEFORE_MORE = 3;
+
+function CourseStartDates({ startDates }: { startDates: string[] }) {
+  if (!startDates.length) {
+    return <>k. A.</>;
+  }
+
+  const sorted = [...startDates].sort((a, b) => a.localeCompare(b));
+
+  if (sorted.length <= MAX_INLINE_START_DATES) {
+    return (
+      <span className="course-dates-inline">{sorted.map(formatDate).join(" · ")}</span>
+    );
+  }
+
+  const head = sorted.slice(0, PREVIEW_BEFORE_MORE);
+  const tail = sorted.slice(PREVIEW_BEFORE_MORE);
+
+  return (
+    <span className="course-dates-block">
+      <span className="course-dates-inline">{head.map(formatDate).join(" · ")}</span>
+      <details className="course-dates-details">
+        <summary>
+          {tail.length === 1
+            ? "+1 weiterer Termin"
+            : `+${tail.length} weitere Termine`}
+        </summary>
+        <ul className="course-dates-overflow-list">
+          {tail.map((iso) => (
+            <li key={iso}>{formatDate(iso)}</li>
+          ))}
+        </ul>
+      </details>
+    </span>
+  );
+}
+
 export function CourseList({
   courses,
   activeDate,
@@ -144,7 +182,9 @@ export function CourseList({
                   </svg>
                   Termine
                 </dt>
-                <dd>{course.startDates.length || "k. A."}</dd>
+                <dd>
+                  <CourseStartDates startDates={course.startDates} />
+                </dd>
               </div>
             </dl>
             <div className="course-card-footer">
