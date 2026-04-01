@@ -15,6 +15,7 @@ type CourseListProps = {
   activeDate: string;
   selectedByDate: Record<string, number>;
   onAssignCourse: (courseId: number) => void;
+  onRemoveCourse: (startDate: string) => void;
 };
 
 function formatDate(isoDate: string): string {
@@ -27,7 +28,8 @@ export function CourseList({
   courses,
   activeDate,
   selectedByDate,
-  onAssignCourse
+  onAssignCourse,
+  onRemoveCourse
 }: CourseListProps) {
   const isDateSelected = activeDate !== "all";
 
@@ -57,6 +59,13 @@ export function CourseList({
             : isReplacing
               ? "Für Termin ersetzen"
               : "In Studienplan aufnehmen";
+        const actionTooltip = !isDateSelected
+          ? "Bitte zuerst in der linken Spalte ein konkretes Startdatum wählen."
+          : isAssigned
+            ? "Kurs für dieses Startdatum aus dem Studienplan entfernen."
+            : isReplacing
+              ? "Kurs für dieses Startdatum im Studienplan ersetzen."
+              : "Kurs für dieses Startdatum in den Studienplan aufnehmen.";
 
         return (
           <article className="course-card" key={course.id}>
@@ -71,38 +80,63 @@ export function CourseList({
               </li>
             </ul>
             <div className="course-plan-controls">
-              <p className="course-plan-label">
-                {isDateSelected
-                  ? `Aktives Startdatum: ${formatDate(activeDate)}`
-                  : "Bitte zuerst ein konkretes Startdatum wählen"}
-              </p>
               <div className="course-plan-row">
                 <div
-                  className={`course-plan-tooltip-wrap ${!isDateSelected ? "has-tooltip" : ""}`}
-                  data-tooltip="Bitte zuerst ein konkretes Startdatum wählen."
+                  className="course-plan-tooltip-wrap has-tooltip"
+                  data-tooltip={actionTooltip}
                 >
                   <button
                     type="button"
-                    className={`course-plan-primary-btn ${
-                      isReplacing ? "course-plan-primary-btn-replace" : ""
+                    className={`course-plan-icon-btn ${
+                      isAssigned
+                        ? "course-plan-icon-btn-remove"
+                        : isReplacing
+                          ? "course-plan-icon-btn-replace"
+                          : "course-plan-icon-btn-add"
                     }`}
-                    disabled={!isDateSelected || isAssigned}
-                    onClick={() => onAssignCourse(course.id)}
+                    disabled={!isDateSelected}
+                    onClick={() =>
+                      isAssigned ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
+                    }
+                    aria-label={actionLabel}
                   >
-                    {actionLabel}
+                    {isAssigned ? (
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <path
+                          d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    ) : isReplacing ? (
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <path
+                          d="M7 7h10v10M17 7l-3 3M7 17l3-3"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" aria-hidden>
+                        <path
+                          d="M12 5v14M5 12h14"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </div>
-              {isAssigned && (
-                <p className="course-plan-note">
-                  Dieser Kurs ist für den ausgewählten Termin bereits im Studienplan.
-                </p>
-              )}
-              {isReplacing && (
-                <p className="course-plan-note course-plan-note-warning">
-                  Für diesen Termin ist bereits ein anderer Kurs geplant und wird ersetzt.
-                </p>
-              )}
             </div>
             <div className="course-card-footer">
               <a className="course-link" href={course.url} target="_blank" rel="noreferrer">

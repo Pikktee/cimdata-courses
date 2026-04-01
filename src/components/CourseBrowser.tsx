@@ -277,112 +277,114 @@ export function CourseBrowser({
 
   return (
     <>
-      <section className="toolbar">
-        <DateFilter
-          options={initial.availableStartDates}
-          value={selectedDate}
-          onChange={handleDateChange}
-          courseCount={filteredCourses.length}
-          disabled={false}
-        />
-      </section>
-
       <section className="planner-layout">
+        <aside className="planner-sidebar">
+          <section className="toolbar">
+            <DateFilter
+              options={initial.availableStartDates}
+              value={selectedDate}
+              onChange={handleDateChange}
+              courseCount={filteredCourses.length}
+              disabled={false}
+            />
+          </section>
+
+          <aside className="plan-panel" aria-live="polite">
+            <div className="plan-panel-head">
+              <p className="plan-panel-eyebrow">Mein Studienplan</p>
+              <h2>Lokale Planung</h2>
+            </div>
+
+            {plannedEntries.length === 0 ? (
+              <p className="plan-empty">
+                Wähle links ein Startdatum und füge danach in den Kurskacheln passende Kurse hinzu.
+              </p>
+            ) : (
+              <>
+                <div className="plan-stats">
+                  <p>
+                    <strong>{plannedEntries.length}</strong>{" "}
+                    {plannedEntries.length === 1 ? "Kurs gewählt" : "Kurse gewählt"}
+                  </p>
+                  {formattedPeriod && (
+                    <p>
+                      Zeitraum:{" "}
+                      <strong>
+                        {formatDate(formattedPeriod.first)} - {formatDate(formattedPeriod.last)}
+                      </strong>
+                    </p>
+                  )}
+                  {gapHints.length > 0 ? (
+                    <p className="plan-gap-hint">
+                      Achtung: {gapHints.length} zeitliche{" "}
+                      {gapHints.length === 1 ? "Lücke erkannt." : "Lücken erkannt."}
+                    </p>
+                  ) : (
+                    <p className="plan-gap-ok">Keine zeitlichen Lücken zwischen den Kursen.</p>
+                  )}
+                </div>
+
+                {gapHints.length > 0 && (
+                  <ul className="plan-gap-list">
+                    {gapHints.map((gap) => (
+                      <li key={`${gap.from}-${gap.to}`}>
+                        {formatDate(gap.from)} bis {formatDate(gap.to)}: {gap.gapDays}{" "}
+                        {gap.gapDays === 1 ? "Tag frei" : "Tage frei"}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <ul className="plan-course-list">
+                  {plannedEntries.map((entry) => (
+                    <li key={`${entry.startDate}-${entry.course.id}`} className="plan-course-item">
+                      <div>
+                        <p className="plan-course-date">{formatDate(entry.startDate)}</p>
+                        <p className="plan-course-title">{entry.course.title}</p>
+                        <label className="plan-swap-label" htmlFor={`swap-${entry.startDate}`}>
+                          Kurs tauschen:
+                        </label>
+                        <select
+                          id={`swap-${entry.startDate}`}
+                          className="plan-swap-select"
+                          value={entry.course.id}
+                          onChange={(event) =>
+                            handleAssignCourseForDate(Number(event.target.value), entry.startDate)
+                          }
+                        >
+                          {(courseOptionsByStartDate.get(entry.startDate) ?? []).map((option) => (
+                            <option key={`${entry.startDate}-${option.id}`} value={option.id}>
+                              {option.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        className="plan-remove-btn"
+                        onClick={() => handleRemoveCourse(entry.startDate)}
+                      >
+                        Entfernen
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
+                  Studienplan zurücksetzen
+                </button>
+              </>
+            )}
+          </aside>
+        </aside>
+
         <CourseList
           courses={filteredCourses}
           activeDate={selectedDate}
           selectedByDate={selectedCoursesByDate}
           onAssignCourse={handleAssignCourse}
+          onRemoveCourse={handleRemoveCourse}
         />
-
-        <aside className="plan-panel" aria-live="polite">
-          <div className="plan-panel-head">
-            <p className="plan-panel-eyebrow">Mein Studienplan</p>
-            <h2>Lokale Planung</h2>
-          </div>
-
-          {plannedEntries.length === 0 ? (
-            <p className="plan-empty">
-              Wähle in den Kurskarten einen Termin aus. Pro Startdatum ist genau ein Kurs in der
-              Liste - bei gleicher Startzeit wird automatisch ersetzt.
-            </p>
-          ) : (
-            <>
-              <div className="plan-stats">
-                <p>
-                  <strong>{plannedEntries.length}</strong>{" "}
-                  {plannedEntries.length === 1 ? "Kurs gewählt" : "Kurse gewählt"}
-                </p>
-                {formattedPeriod && (
-                  <p>
-                    Zeitraum:{" "}
-                    <strong>
-                      {formatDate(formattedPeriod.first)} - {formatDate(formattedPeriod.last)}
-                    </strong>
-                  </p>
-                )}
-                {gapHints.length > 0 ? (
-                  <p className="plan-gap-hint">
-                    Achtung: {gapHints.length} zeitliche{" "}
-                    {gapHints.length === 1 ? "Lücke erkannt." : "Lücken erkannt."}
-                  </p>
-                ) : (
-                  <p className="plan-gap-ok">Keine zeitlichen Lücken zwischen den Kursen.</p>
-                )}
-              </div>
-
-              {gapHints.length > 0 && (
-                <ul className="plan-gap-list">
-                  {gapHints.map((gap) => (
-                    <li key={`${gap.from}-${gap.to}`}>
-                      {formatDate(gap.from)} bis {formatDate(gap.to)}: {gap.gapDays}{" "}
-                      {gap.gapDays === 1 ? "Tag frei" : "Tage frei"}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <ul className="plan-course-list">
-                {plannedEntries.map((entry) => (
-                  <li key={`${entry.startDate}-${entry.course.id}`} className="plan-course-item">
-                    <div>
-                      <p className="plan-course-date">{formatDate(entry.startDate)}</p>
-                      <p className="plan-course-title">{entry.course.title}</p>
-                      <label className="plan-swap-label" htmlFor={`swap-${entry.startDate}`}>
-                        Kurs tauschen:
-                      </label>
-                      <select
-                        id={`swap-${entry.startDate}`}
-                        className="plan-swap-select"
-                        value={entry.course.id}
-                        onChange={(event) =>
-                          handleAssignCourseForDate(Number(event.target.value), entry.startDate)
-                        }
-                      >
-                        {(courseOptionsByStartDate.get(entry.startDate) ?? []).map((option) => (
-                          <option key={`${entry.startDate}-${option.id}`} value={option.id}>
-                            {option.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      className="plan-remove-btn"
-                      onClick={() => handleRemoveCourse(entry.startDate)}
-                    >
-                      Entfernen
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-              <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
-                Studienplan zurücksetzen
-              </button>
-            </>
-          )}
-        </aside>
       </section>
       <footer className="list-footer" aria-live="polite">
         <section className="refresh-summary-card" aria-label="Refresh-Status">
