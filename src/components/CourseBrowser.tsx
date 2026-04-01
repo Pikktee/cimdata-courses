@@ -141,12 +141,10 @@ export function CourseBrowser({
   const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
   const [planActionNotice, setPlanActionNotice] = useState<string | null>(null);
   const [planEntryEffects, setPlanEntryEffects] = useState<
-    Record<string, "add" | "replace" | "removing">
+    Record<string, "add" | "replace">
   >({});
-  const [planPendingRemoval, setPlanPendingRemoval] = useState<Record<string, boolean>>({});
   const [planConfirmDialog, setPlanConfirmDialog] = useState<
     | null
-    | { kind: "remove"; startDate: string; courseTitle: string }
     | { kind: "clear"; courseCount: number }
   >(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
@@ -326,49 +324,6 @@ export function CourseBrowser({
     });
   }, []);
 
-  const performRemoveFromPlan = useCallback(
-    (startDate: string) => {
-      if (planPendingRemoval[startDate]) return;
-      setPlanPendingRemoval((current) => ({
-        ...current,
-        [startDate]: true
-      }));
-      setPlanEntryEffects((current) => ({
-        ...current,
-        [startDate]: "removing"
-      }));
-      window.setTimeout(() => {
-        handleRemoveCourse(startDate);
-        setPlanPendingRemoval((current) => {
-          const next = { ...current };
-          delete next[startDate];
-          return next;
-        });
-        setPlanEntryEffects((current) => {
-          const next = { ...current };
-          delete next[startDate];
-          return next;
-        });
-      }, 180);
-    },
-    [handleRemoveCourse, planPendingRemoval]
-  );
-
-  const openRemoveCourseDialog = useCallback(
-    (startDate: string) => {
-      if (planPendingRemoval[startDate]) return;
-      const courseId = selectedCoursesByDate[startDate];
-      const course =
-        typeof courseId === "number" ? coursesById.get(courseId) : undefined;
-      setPlanConfirmDialog({
-        kind: "remove",
-        startDate,
-        courseTitle: course?.title ?? "diesen Kurs"
-      });
-    },
-    [planPendingRemoval, selectedCoursesByDate, coursesById]
-  );
-
   const toggleCourseMinimized = useCallback((courseId: number) => {
     setMinimizedCourseIds((current) => {
       if (current.includes(courseId)) {
@@ -400,7 +355,6 @@ export function CourseBrowser({
   const performClearStudyPlan = useCallback(() => {
     setSelectedCoursesByDate({});
     setPlanEntryEffects({});
-    setPlanPendingRemoval({});
     setManualRefreshNotice("Studienplan wurde zurückgesetzt.");
     setPlanConfirmDialog(null);
   }, []);
@@ -413,14 +367,8 @@ export function CourseBrowser({
 
   const confirmPlanDialog = useCallback(() => {
     if (!planConfirmDialog) return;
-    if (planConfirmDialog.kind === "remove") {
-      const { startDate } = planConfirmDialog;
-      setPlanConfirmDialog(null);
-      performRemoveFromPlan(startDate);
-      return;
-    }
     performClearStudyPlan();
-  }, [planConfirmDialog, performRemoveFromPlan, performClearStudyPlan]);
+  }, [planConfirmDialog, performClearStudyPlan]);
 
   useEffect(() => {
     if (!planConfirmDialog) return;
@@ -638,24 +586,6 @@ export function CourseBrowser({
                             <span className="plan-course-detail">{entry.course.locationText}</span>
                           ) : null}
                         </button>
-                        <button
-                          type="button"
-                          className="plan-remove-icon-btn"
-                          aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
-                          title="Entfernen"
-                          disabled={Boolean(planPendingRemoval[entry.startDate])}
-                          onClick={() => openRemoveCourseDialog(entry.startDate)}
-                        >
-                          <svg viewBox="0 0 24 24" aria-hidden>
-                            <path
-                              d="M18 6 6 18M6 6l12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </button>
                       </li>
                       {gapAfter ? (
                         <li className="plan-gap-item" aria-label={`Lücke von ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)}`}>
@@ -782,30 +712,17 @@ export function CourseBrowser({
             onMouseDown={(e) => e.stopPropagation()}
           >
             <h2 id={planConfirmTitleId} className="plan-confirm-title">
-              {planConfirmDialog.kind === "remove"
-                ? "Kurs entfernen?"
-                : "Studienplan zurücksetzen?"}
+              Studienplan zurücksetzen?
             </h2>
             <p className="plan-confirm-body">
-              {planConfirmDialog.kind === "remove" ? (
-                <>
-                  <strong>{planConfirmDialog.courseTitle}</strong>
-                  {" · "}
-                  {formatDate(planConfirmDialog.startDate)}
-                  <br />
-                  Dieser Kurs wird aus dem Studienplan entfernt. Du kannst ihn später wieder
-                  hinzufügen.
-                </>
-              ) : (
-                <>
-                  Alle{" "}
-                  <strong>
-                    {planConfirmDialog.courseCount}{" "}
-                    {planConfirmDialog.courseCount === 1 ? "Kurs" : "Kurse"}
-                  </strong>{" "}
-                  werden aus dem Plan entfernt. Das kann nicht rückgängig gemacht werden.
-                </>
-              )}
+              <>
+                Alle{" "}
+                <strong>
+                  {planConfirmDialog.courseCount}{" "}
+                  {planConfirmDialog.courseCount === 1 ? "Kurs" : "Kurse"}
+                </strong>{" "}
+                werden aus dem Plan entfernt. Das kann nicht rückgängig gemacht werden.
+              </>
             </p>
             <div className="plan-confirm-actions">
               <button
@@ -821,7 +738,7 @@ export function CourseBrowser({
                 className="plan-confirm-btn plan-confirm-btn--danger"
                 onClick={confirmPlanDialog}
               >
-                {planConfirmDialog.kind === "remove" ? "Entfernen" : "Zurücksetzen"}
+                Zurücksetzen
               </button>
             </div>
           </div>

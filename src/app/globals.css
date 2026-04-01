@@ -1292,9 +1292,9 @@ body {
 .plan-course-item {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  column-gap: 0.38rem;
+  column-gap: 0;
   row-gap: 0;
   border-radius: 0;
   border: none;
@@ -1418,51 +1418,9 @@ body {
   color: var(--text-muted);
 }
 
-.plan-remove-icon-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--plan-remove-ring);
-}
-
 .plan-clear-btn:focus-visible {
   outline: none;
   box-shadow: var(--plan-accent-ring);
-}
-
-.plan-remove-icon-btn {
-  width: 1.38rem;
-  height: 1.38rem;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  border-radius: var(--radius-xs);
-  padding: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background-color var(--duration) var(--ease),
-    color var(--duration) var(--ease),
-    transform var(--duration) var(--ease),
-    opacity var(--duration) var(--ease);
-  opacity: 0.78;
-}
-
-.plan-remove-icon-btn svg {
-  width: 0.78rem;
-  height: 0.78rem;
-}
-
-.plan-remove-icon-btn:hover {
-  transform: none;
-  color: var(--plan-remove-fg);
-  background: var(--plan-remove-bg-hover);
-  opacity: 1;
-}
-
-.plan-remove-icon-btn:disabled {
-  opacity: 0.55;
-  cursor: progress;
 }
 
 @keyframes plan-item-add {
