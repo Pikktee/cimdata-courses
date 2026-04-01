@@ -83,6 +83,40 @@ function isCourseAlreadyPlannedElsewhere(
   });
 }
 
+function getOverlappingPlannedEntry(
+  plan: Record<string, number>,
+  coursesById: Map<number, CourseItem>,
+  candidateCourseId: number,
+  selectedStartDate: string
+): { startDate: string; title: string } | null {
+  const candidateCourse = coursesById.get(candidateCourseId);
+  if (!candidateCourse) return null;
+
+  const candidateStart = parseIsoDate(selectedStartDate);
+  const candidateEndExclusive = new Date(
+    candidateStart.getTime() + parseDurationDays(candidateCourse.durationText) * MS_PER_DAY
+  );
+
+  for (const [startDate, plannedCourseId] of Object.entries(plan)) {
+    // Der aktuell ausgewählte Slot wird ersetzt und darf daher nicht als Konflikt zählen.
+    if (startDate === selectedStartDate) continue;
+    const plannedCourse = coursesById.get(plannedCourseId);
+    if (!plannedCourse) continue;
+
+    const plannedStart = parseIsoDate(startDate);
+    const plannedEndExclusive = new Date(
+      plannedStart.getTime() + parseDurationDays(plannedCourse.durationText) * MS_PER_DAY
+    );
+
+    const overlaps = candidateStart < plannedEndExclusive && plannedStart < candidateEndExclusive;
+    if (overlaps) {
+      return { startDate, title: plannedCourse.title };
+    }
+  }
+
+  return null;
+}
+
 function formatDateTime(value: string | null): string {
   if (!value) return "k. A.";
   return new Date(value).toLocaleString("de-DE");
@@ -284,6 +318,21 @@ export function CourseBrowser({
         );
         return;
       }
+      const overlappingEntry = getOverlappingPlannedEntry(
+        selectedCoursesByDate,
+        coursesById,
+        courseId,
+        selectedDate
+      );
+      if (overlappingEntry) {
+        const candidate = coursesById.get(courseId);
+        setPlanActionNotice(
+          candidate
+            ? `„${candidate.title}“ überlappt mit „${overlappingEntry.title}“ (${formatDate(overlappingEntry.startDate)}).`
+            : `Der Kurs überlappt mit einem bereits geplanten Kurs (${formatDate(overlappingEntry.startDate)}).`
+        );
+        return;
+      }
       setPlanActionNotice(null);
       const previousCourseId = selectedCoursesByDate[selectedDate];
       const effectType =
@@ -305,7 +354,7 @@ export function CourseBrowser({
         });
       }, 650);
     },
-    [selectedDate, selectedCoursesByDate, coursesById]
+    [selectedDate, selectedCoursesByDate, coursesById, formatDate]
   );
 
   const isCourseBlockedDuplicate = useCallback(
