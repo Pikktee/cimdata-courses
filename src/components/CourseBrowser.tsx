@@ -110,7 +110,7 @@ export function CourseBrowser({
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("all");
   const [selectedCoursesByDate, setSelectedCoursesByDate] = useState<Record<string, number>>({});
-  const [favoriteCourseIds, setFavoriteCourseIds] = useState<number[]>([]);
+  const [minimizedCourseIds, setMinimizedCourseIds] = useState<number[]>([]);
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
   const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
   const [planActionNotice, setPlanActionNotice] = useState<string | null>(null);
@@ -135,7 +135,7 @@ export function CourseBrowser({
 
       const parsed = JSON.parse(raw) as {
         selectedCoursesByDate?: unknown;
-        favoriteCourseIds?: unknown;
+        minimizedCourseIds?: unknown;
       };
 
       if (parsed.selectedCoursesByDate && typeof parsed.selectedCoursesByDate === "object") {
@@ -145,12 +145,12 @@ export function CourseBrowser({
         setSelectedCoursesByDate(Object.fromEntries(nextEntries));
       }
 
-      if (Array.isArray(parsed.favoriteCourseIds)) {
-        const favorites = parsed.favoriteCourseIds.filter(
+      if (Array.isArray(parsed.minimizedCourseIds)) {
+        const minimized = parsed.minimizedCourseIds.filter(
           (courseId): courseId is number =>
             typeof courseId === "number" && Number.isInteger(courseId) && coursesById.has(courseId)
         );
-        setFavoriteCourseIds(Array.from(new Set(favorites)));
+        setMinimizedCourseIds(Array.from(new Set(minimized)));
       }
 
     } catch {
@@ -166,10 +166,10 @@ export function CourseBrowser({
       STUDY_PLAN_STORAGE_KEY,
       JSON.stringify({
         selectedCoursesByDate,
-        favoriteCourseIds
+        minimizedCourseIds
       })
     );
-  }, [favoriteCourseIds, hasLoadedLocalPlan, selectedCoursesByDate]);
+  }, [hasLoadedLocalPlan, minimizedCourseIds, selectedCoursesByDate]);
 
   useEffect(() => {
     if (!planActionNotice) return;
@@ -177,24 +177,13 @@ export function CourseBrowser({
     return () => clearTimeout(timer);
   }, [planActionNotice]);
 
-  const favoriteCourseIdSet = useMemo(() => new Set(favoriteCourseIds), [favoriteCourseIds]);
+  const minimizedCourseIdSet = useMemo(() => new Set(minimizedCourseIds), [minimizedCourseIds]);
 
   const filteredCourses = useMemo(() => {
-    const visible = initial.courses
-      .map((course, index) => ({ course, index }))
-      .filter(
-        ({ course }) => selectedDate === "all" || course.startDates.includes(selectedDate)
-      );
-
-    visible.sort((a, b) => {
-      const aFavorite = favoriteCourseIdSet.has(a.course.id);
-      const bFavorite = favoriteCourseIdSet.has(b.course.id);
-      if (aFavorite === bFavorite) return a.index - b.index;
-      return aFavorite ? -1 : 1;
-    });
-
-    return visible.map(({ course }) => course);
-  }, [favoriteCourseIdSet, initial.courses, selectedDate]);
+    return initial.courses.filter(
+      (course) => selectedDate === "all" || course.startDates.includes(selectedDate)
+    );
+  }, [initial.courses, selectedDate]);
 
   const plannedEntries = useMemo(() => {
     return Object.entries(selectedCoursesByDate)
@@ -244,8 +233,8 @@ export function CourseBrowser({
     });
   }, []);
 
-  const toggleCourseFavorite = useCallback((courseId: number) => {
-    setFavoriteCourseIds((current) => {
+  const toggleCourseMinimized = useCallback((courseId: number) => {
+    setMinimizedCourseIds((current) => {
       if (current.includes(courseId)) {
         return current.filter((id) => id !== courseId);
       }
@@ -518,8 +507,8 @@ export function CourseBrowser({
           onAssignCourse={handleAssignCourse}
           onRemoveCourse={handleRemoveCourse}
           isCourseBlocked={isCourseBlockedDuplicate}
-          isFavorite={(courseId) => favoriteCourseIdSet.has(courseId)}
-          onToggleFavorite={toggleCourseFavorite}
+          isMinimized={(courseId) => minimizedCourseIdSet.has(courseId)}
+          onToggleMinimized={toggleCourseMinimized}
         />
       </section>
 
