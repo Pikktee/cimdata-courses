@@ -2,22 +2,47 @@
 
 import { useEffect, useState } from "react";
 
+type Feedback = { id: number; text: string };
+
 export function PlanShareButton() {
-  const [notice, setNotice] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
 
   useEffect(() => {
-    if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(null), 2200);
-    return () => clearTimeout(timer);
-  }, [notice]);
+    if (!feedback) return;
+
+    setFeedbackVisible(false);
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setFeedbackVisible(true));
+    });
+
+    const hideTimer = window.setTimeout(() => setFeedbackVisible(false), 1900);
+    const removeTimer = window.setTimeout(() => {
+      setFeedback(null);
+      setFeedbackVisible(false);
+    }, 1900 + 260);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      clearTimeout(hideTimer);
+      clearTimeout(removeTimer);
+    };
+  }, [feedback]);
 
   const handleShare = async () => {
+    let text: string;
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setNotice("Link kopiert");
+      text = "Link kopiert";
     } catch {
-      setNotice("Link bereit (URL kopieren)");
+      text = "Link bereit (URL kopieren)";
     }
+    setFeedback((prev) => ({
+      id: (prev?.id ?? 0) + 1,
+      text
+    }));
   };
 
   return (
@@ -26,6 +51,19 @@ export function PlanShareButton() {
       data-tooltip="Erstellt einen teilbaren Link mit deinen aktuellen Einstellungen: Startdatum, Studienplan und ausgeblendete Kurse."
       aria-live="polite"
     >
+      {feedback && (
+        <span
+          key={feedback.id}
+          role="status"
+          className={
+            feedbackVisible
+              ? "hero-share-note hero-share-note--visible"
+              : "hero-share-note"
+          }
+        >
+          {feedback.text}
+        </span>
+      )}
       <button
         type="button"
         className="hero-share-btn"
@@ -34,7 +72,6 @@ export function PlanShareButton() {
       >
         Plan teilen
       </button>
-      {notice && <span className="hero-share-note">{notice}</span>}
     </div>
   );
 }

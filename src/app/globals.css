@@ -154,9 +154,11 @@ body {
 }
 
 .hero-share-wrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: flex-end;
+  gap: 0;
   min-height: 1.35rem;
 }
 
@@ -185,8 +187,30 @@ body {
 }
 
 .hero-share-note {
+  position: absolute;
+  right: calc(100% + 0.42rem);
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: min(220px, 58vw);
+  padding: 0.12rem 0;
   font-size: 0.69rem;
-  color: rgba(255, 255, 255, 0.72);
+  font-weight: 560;
+  line-height: 1.35;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 2;
+  transition:
+    opacity 240ms var(--ease),
+    visibility 240ms var(--ease);
+}
+
+.hero-share-note--visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .hero-share-wrap.has-tooltip {
