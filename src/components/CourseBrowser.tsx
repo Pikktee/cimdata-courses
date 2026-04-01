@@ -394,13 +394,15 @@ export function CourseBrowser({
                     </li>
                   ))}
                 </ul>
-
-                <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
-                  Plan zurücksetzen
-                </button>
               </>
             )}
             </div>
+
+            {plannedEntries.length > 0 && (
+              <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
+                Plan zurücksetzen
+              </button>
+            )}
           </aside>
         </aside>
 

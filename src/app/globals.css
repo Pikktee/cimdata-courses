@@ -742,7 +742,8 @@ body {
   display: grid;
   gap: 0.42rem;
   min-height: 0;
-  max-height: min(65vh, 28rem);
+  /* Nur Inhalt scrollt; „Plan zurücksetzen“ liegt außerhalb (direkt unter der Box). */
+  max-height: min(70vh, 34rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -751,6 +752,14 @@ body {
 
 .plan-panel-body::-webkit-scrollbar {
   display: none;
+}
+
+.plan-panel > .plan-clear-btn {
+  margin-top: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  justify-self: stretch;
+  text-align: left;
 }
 
 .manual-refresh-btn {
