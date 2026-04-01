@@ -668,35 +668,12 @@ body {
   max-height: min(65vh, 28rem);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding-right: 0.2rem;
-  margin-right: -0.15rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.plan-panel-head {
-  display: block;
-}
-
-.plan-panel-head-titles {
-  display: grid;
-  gap: 0.05rem;
-}
-
-.plan-panel-eyebrow {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.88rem;
-  font-weight: 640;
-  letter-spacing: normal;
-  text-transform: none;
-}
-
-.plan-panel h2 {
-  margin: 0;
-  font-size: 0.92rem;
-  font-family: var(--font-body), system-ui, sans-serif;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  color: var(--text);
+.plan-panel-body::-webkit-scrollbar {
+  display: none;
 }
 
 .manual-refresh-btn {
@@ -1287,8 +1264,12 @@ body {
   .plan-panel-body {
     max-height: none;
     overflow-y: visible;
-    padding-right: 0;
-    margin-right: 0;
+    scrollbar-width: auto;
+    -ms-overflow-style: auto;
+  }
+
+  .plan-panel-body::-webkit-scrollbar {
+    display: revert;
   }
 
   .course-grid {

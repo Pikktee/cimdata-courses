@@ -287,11 +287,32 @@ export function CourseBrowser({
           </section>
 
           <aside className="plan-panel control-card" aria-live="polite">
-            <div className="plan-panel-head">
-              <div className="plan-panel-head-titles">
-                <p className="plan-panel-eyebrow">Studienplan</p>
-                <h2>Deine Planung</h2>
-              </div>
+            <div className="control-head">
+              <span className="control-label">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                  style={{
+                    display: "inline",
+                    verticalAlign: "-0.12em",
+                    marginRight: "0.35rem",
+                    opacity: 0.5
+                  }}
+                >
+                  <path d="M9 6h11M9 12h11M9 18h7" />
+                  <circle cx="5" cy="6" r="1.25" fill="currentColor" stroke="none" />
+                  <circle cx="5" cy="12" r="1.25" fill="currentColor" stroke="none" />
+                  <circle cx="5" cy="18" r="1.25" fill="currentColor" stroke="none" />
+                </svg>
+                Studienplan
+              </span>
             </div>
 
             <div className="plan-panel-body">
