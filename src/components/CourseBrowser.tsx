@@ -36,6 +36,17 @@ type CoursesResponse = {
 };
 
 const STUDY_PLAN_STORAGE_KEY = "cimdata-study-plan-v1";
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function parseIsoDate(iso: string): Date {
+  return new Date(`${iso}T00:00:00Z`);
+}
+
+function parseDurationDays(durationText: string | null): number {
+  if (!durationText) return 14;
+  if (/\b4\b/.test(durationText)) return 28;
+  return 14;
+}
 
 function formatDateTime(value: string | null): string {
   if (!value) return "k. A.";
@@ -145,19 +156,21 @@ export function CourseBrowser({
   }, [coursesById, selectedCoursesByDate]);
 
   const gapHints = useMemo(() => {
-    const parseDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
-    const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const gaps: { from: string; to: string; gapDays: number }[] = [];
 
     for (let i = 1; i < plannedEntries.length; i += 1) {
-      const prev = parseDate(plannedEntries[i - 1].startDate);
-      const curr = parseDate(plannedEntries[i].startDate);
-      const diffDays = Math.round((curr.getTime() - prev.getTime()) / MS_PER_DAY);
-      if (diffDays > 1) {
+      const previousEntry = plannedEntries[i - 1];
+      const currentEntry = plannedEntries[i];
+      const previousStart = parseIsoDate(previousEntry.startDate);
+      const currentStart = parseIsoDate(currentEntry.startDate);
+      const previousDurationDays = parseDurationDays(previousEntry.course.durationText);
+      const gapDays = Math.round((currentStart.getTime() - previousStart.getTime()) / MS_PER_DAY) - previousDurationDays;
+
+      if (gapDays > 0) {
         gaps.push({
-          from: plannedEntries[i - 1].startDate,
-          to: plannedEntries[i].startDate,
-          gapDays: diffDays - 1
+          from: previousEntry.startDate,
+          to: currentEntry.startDate,
+          gapDays
         });
       }
     }
@@ -176,13 +189,6 @@ export function CourseBrowser({
     [selectedDate]
   );
 
-  const handleAssignCourseForDate = useCallback((courseId: number, startDate: string) => {
-    setSelectedCoursesByDate((current) => ({
-      ...current,
-      [startDate]: courseId
-    }));
-  }, []);
-
   const handleRemoveCourse = useCallback((startDate: string) => {
     setSelectedCoursesByDate((current) => {
       const next = { ...current };
@@ -199,8 +205,12 @@ export function CourseBrowser({
   const formattedPeriod = useMemo(() => {
     if (plannedEntries.length === 0) return null;
     const first = plannedEntries[0]?.startDate;
-    const last = plannedEntries[plannedEntries.length - 1]?.startDate;
-    if (!first || !last) return null;
+    const lastEntry = plannedEntries[plannedEntries.length - 1];
+    if (!first || !lastEntry) return null;
+    const lastStart = parseIsoDate(lastEntry.startDate);
+    const lastDurationDays = parseDurationDays(lastEntry.course.durationText);
+    const lastEnd = new Date(lastStart.getTime() + lastDurationDays * MS_PER_DAY);
+    const last = lastEnd.toISOString().slice(0, 10);
     return { first, last };
   }, [plannedEntries]);
 
@@ -236,24 +246,6 @@ export function CourseBrowser({
       }
     });
   }, [router]);
-
-  const courseOptionsByStartDate = useMemo(() => {
-    const map = new Map<string, CourseItem[]>();
-    for (const course of initial.courses) {
-      for (const startDate of course.startDates) {
-        const current = map.get(startDate) ?? [];
-        current.push(course);
-        map.set(startDate, current);
-      }
-    }
-
-    for (const [startDate, items] of map.entries()) {
-      items.sort((a, b) => a.title.localeCompare(b.title, "de"));
-      map.set(startDate, items);
-    }
-
-    return map;
-  }, [initial.courses]);
 
   const latestRefresh = initial.latestRefresh;
   const latestStatusTone = getRefreshStatusTone(latestRefresh?.status ?? "unknown");
@@ -352,23 +344,9 @@ export function CourseBrowser({
                       </div>
                       <div>
                         <p className="plan-course-title">{entry.course.title}</p>
-                        <label className="plan-swap-label" htmlFor={`swap-${entry.startDate}`}>
-                          Kurs tauschen
-                        </label>
-                        <select
-                          id={`swap-${entry.startDate}`}
-                          className="plan-swap-select"
-                          value={entry.course.id}
-                          onChange={(event) =>
-                            handleAssignCourseForDate(Number(event.target.value), entry.startDate)
-                          }
-                        >
-                          {(courseOptionsByStartDate.get(entry.startDate) ?? []).map((option) => (
-                            <option key={`${entry.startDate}-${option.id}`} value={option.id}>
-                              {option.title}
-                            </option>
-                          ))}
-                        </select>
+                        <p className="plan-course-duration">
+                          Dauer: {entry.course.durationText ?? "k. A."}
+                        </p>
                       </div>
                     </li>
                   ))}

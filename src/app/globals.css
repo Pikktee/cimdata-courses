@@ -833,36 +833,10 @@ body {
   font-weight: 500;
 }
 
-.plan-swap-label {
-  display: block;
-  margin-top: 0.35rem;
-  margin-bottom: 0.2rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.plan-swap-select {
-  width: 100%;
-  border: 1.5px solid var(--border-hover);
-  border-radius: var(--radius-xs);
-  padding: 0.36rem 0.52rem;
-  font-size: 0.79rem;
-  color: var(--text);
-  background: var(--surface);
-  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
-}
-
-.plan-swap-select:hover {
-  border-color: var(--primary-border);
-}
-
-.plan-swap-select:focus-visible {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: var(--ring);
+.plan-course-duration {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 .plan-remove-icon-btn:focus-visible,
