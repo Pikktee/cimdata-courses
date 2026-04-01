@@ -1139,34 +1139,35 @@ body {
   overflow: visible;
 }
 
-.plan-panel > .plan-clear-btn {
-  margin-top: 0;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border);
-  justify-self: stretch;
-  text-align: left;
-}
-
-.plan-clear-btn {
-  justify-self: start;
-  margin-top: 0.15rem;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
+.plan-reset-icon-btn {
+  width: 1.42rem;
+  height: 1.42rem;
   border-radius: var(--radius-xs);
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.2rem 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 0.14rem;
-  transition: color var(--duration) var(--ease), text-decoration-color var(--duration) var(--ease);
+  transition:
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
 }
 
-.plan-clear-btn:hover {
-  color: var(--plan-accent-hover);
-  text-decoration-color: var(--plan-accent-border-soft);
+.plan-reset-icon-btn svg {
+  width: 0.72rem;
+  height: 0.72rem;
+}
+
+.plan-reset-icon-btn:hover {
+  border-color: var(--plan-accent-border-soft);
+  background: var(--plan-accent-bg);
+  color: var(--plan-accent);
+  transform: scale(1.05);
 }
 
 .plan-empty {
@@ -1346,6 +1347,7 @@ body {
     rgba(79, 70, 229, 0.05) 58%,
     rgba(79, 70, 229, 0.02) 100%
   );
+  border-bottom-color: transparent;
   border-radius: 0;
   box-shadow:
     inset 0 1px 0 var(--border),
@@ -1421,7 +1423,7 @@ body {
   color: var(--text-muted);
 }
 
-.plan-clear-btn:focus-visible {
+.plan-reset-icon-btn:focus-visible {
   outline: none;
   box-shadow: var(--plan-accent-ring);
 }
