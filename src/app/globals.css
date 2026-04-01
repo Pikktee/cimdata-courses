@@ -56,24 +56,26 @@
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --duration: 160ms;
 
-  /* ─ Studienplan / Kurskarten (einheitlicher Teal-Akzent) ─ */
-  --plan-accent: #0d9488;
-  --plan-accent-hover: #0f766e;
-  --plan-accent-soft: #2dd4bf;
-  --plan-accent-bg: rgba(13, 148, 136, 0.11);
-  --plan-accent-bg-hover: rgba(13, 148, 136, 0.16);
-  --plan-accent-border: rgba(13, 148, 136, 0.32);
-  --plan-accent-border-soft: rgba(13, 148, 136, 0.17);
-  --plan-accent-ring: 0 0 0 3px rgba(13, 148, 136, 0.22);
-  --plan-replace: #0e7490;
-  --plan-replace-bg: rgba(14, 116, 144, 0.1);
-  --plan-replace-bg-hover: rgba(14, 116, 144, 0.16);
-  --plan-replace-border: rgba(14, 116, 144, 0.34);
-  --plan-replace-ring: 0 0 0 3px rgba(14, 116, 144, 0.2);
+  /* ─ Studienplan / Sidebar: klares Blau (an Primary angebunden) ─ */
+  --plan-accent: #4f46e5;
+  --plan-accent-hover: #4338ca;
+  --plan-accent-soft: #818cf8;
+  --plan-surface: #f4f6ff;
+  --plan-accent-bg: rgba(79, 70, 229, 0.1);
+  --plan-accent-bg-hover: rgba(79, 70, 229, 0.16);
+  --plan-accent-border: rgba(79, 70, 229, 0.4);
+  --plan-accent-border-soft: rgba(79, 70, 229, 0.22);
+  --plan-accent-ring: 0 0 0 3px rgba(99, 102, 241, 0.28);
+  /* Ersetzen: reines Blau, klar abgesetzt */
+  --plan-replace: #2563eb;
+  --plan-replace-bg: rgba(37, 99, 235, 0.09);
+  --plan-replace-bg-hover: rgba(37, 99, 235, 0.15);
+  --plan-replace-border: rgba(37, 99, 235, 0.38);
+  --plan-replace-ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
   --plan-remove-fg: #475569;
   --plan-remove-bg: rgba(71, 85, 105, 0.09);
   --plan-remove-bg-hover: rgba(71, 85, 105, 0.15);
-  --plan-remove-border: rgba(71, 85, 105, 0.3);
+  --plan-remove-border: rgba(71, 85, 105, 0.32);
   --plan-remove-ring: 0 0 0 3px rgba(71, 85, 105, 0.18);
 
   /* ─ Tooltips (shared, eine Optik überall) ─ */
@@ -389,23 +391,13 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* Sidebar: Startdatum + Studienplan — „Steuerpanel“: heller, leicht erhöht, Indigo-Rahmen (ohne Hover) */
+/* Sidebar: Startdatum + Studienplan — flache blaue Fläche, klarer Rand, linker Akzent (ohne Verläufe/Blobs) */
 .control-card--sidebar {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background-color: #ffffff;
-  background-image: linear-gradient(
-    168deg,
-    rgba(238, 242, 255, 0.85) 0%,
-    rgba(255, 255, 255, 1) 42%,
-    #ffffff 100%
-  );
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.95) inset,
-    0 1px 0 rgba(99, 102, 241, 0.05) inset,
-    0 10px 28px -10px rgba(49, 46, 129, 0.14),
-    0 4px 14px -4px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--plan-accent-border-soft);
+  background: var(--plan-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .control-card--sidebar > * {
@@ -417,30 +409,9 @@ body {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 4px;
+  width: 3px;
   border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-  background: linear-gradient(
-    to bottom,
-    rgba(99, 102, 241, 0.72),
-    rgba(129, 140, 248, 0.22)
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-
-.control-card--sidebar::after {
-  content: "";
-  position: absolute;
-  top: -40%;
-  right: -24%;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.14) 0%,
-    rgba(99, 102, 241, 0) 70%
-  );
+  background: var(--plan-accent);
   pointer-events: none;
   z-index: 0;
 }
@@ -448,43 +419,7 @@ body {
 .control-card--sidebar .control-head {
   padding-bottom: 0.42rem;
   margin-bottom: 0.1rem;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
-}
-
-/* Studienplan-Panel: gleiche Farbfamilie wie Plan-Aktionen auf den Kurskarten */
-.plan-panel.control-card--sidebar {
-  border-color: var(--plan-accent-border-soft);
-  background-image: linear-gradient(
-    168deg,
-    rgba(204, 251, 241, 0.5) 0%,
-    rgba(255, 255, 255, 1) 46%,
-    #ffffff 100%
-  );
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.95) inset,
-    0 1px 0 rgba(13, 148, 136, 0.07) inset,
-    0 10px 28px -10px rgba(13, 148, 136, 0.14),
-    0 4px 14px -4px rgba(15, 23, 42, 0.08);
-}
-
-.plan-panel.control-card--sidebar::before {
-  background: linear-gradient(
-    to bottom,
-    rgba(13, 148, 136, 0.75),
-    rgba(45, 212, 191, 0.28)
-  );
-}
-
-.plan-panel.control-card--sidebar::after {
-  background: radial-gradient(
-    circle,
-    rgba(13, 148, 136, 0.13) 0%,
-    rgba(13, 148, 136, 0) 70%
-  );
-}
-
-.plan-panel.control-card--sidebar .control-head {
-  border-bottom-color: rgba(13, 148, 136, 0.14);
+  border-bottom: 1px solid rgba(79, 70, 229, 0.14);
 }
 
 .control-head {
@@ -649,16 +584,9 @@ body {
 }
 
 .course-card-in-plan {
-  background: linear-gradient(
-    145deg,
-    rgba(13, 148, 136, 0.12) 0%,
-    rgba(13, 148, 136, 0.04) 52%,
-    var(--surface) 100%
-  );
-  border-color: var(--plan-accent-border);
-  box-shadow:
-    0 0 0 1px rgba(13, 148, 136, 0.12),
-    var(--shadow-xs);
+  background: var(--plan-surface);
+  border: 1px solid var(--plan-accent-border);
+  box-shadow: var(--shadow-xs);
 }
 
 .course-card:hover {
@@ -670,9 +598,7 @@ body {
 .course-card-in-plan:hover {
   transform: translateY(-3px);
   border-color: var(--plan-accent-hover);
-  box-shadow:
-    0 0 0 1px rgba(13, 148, 136, 0.22),
-    var(--shadow-md);
+  box-shadow: var(--shadow-md);
 }
 
 .course-card h3 {
@@ -1063,8 +989,8 @@ body {
 
 .course-plan-icon-btn-replace:hover:not(:disabled) {
   background: var(--plan-replace-bg-hover);
-  border-color: rgba(14, 116, 144, 0.42);
-  color: #0c5c72;
+  border-color: rgba(37, 99, 235, 0.45);
+  color: #1d4ed8;
 }
 
 .course-plan-icon-btn-remove {
@@ -1379,7 +1305,7 @@ body {
 }
 
 .plan-course-jump:hover {
-  background: rgba(13, 148, 136, 0.07);
+  background: rgba(79, 70, 229, 0.07);
 }
 
 .plan-course-jump:focus-visible {
@@ -1472,20 +1398,20 @@ body {
 
 @keyframes plan-item-replace {
   0% {
-    background: rgba(13, 148, 136, 0.03);
-    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0);
+    background: rgba(79, 70, 229, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0);
   }
   40% {
-    background: rgba(13, 148, 136, 0.09);
-    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.22);
+    background: rgba(79, 70, 229, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.24);
   }
   72% {
-    background: rgba(13, 148, 136, 0.04);
-    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.11);
+    background: rgba(79, 70, 229, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.12);
   }
   100% {
     background: transparent;
-    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0);
+    box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0);
   }
 }
 
