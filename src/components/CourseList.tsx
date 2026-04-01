@@ -69,8 +69,13 @@ function CourseStartDates({ startDates }: { startDates: string[] }) {
         className="course-dates-more-link"
         onClick={() => setExpanded(true)}
         aria-label={`${moreLabel} anzeigen`}
+        title={moreLabel}
       >
-        {moreLabel}
+        <svg viewBox="0 0 24 24" aria-hidden>
+          <circle cx="5" cy="12" r="1.7" fill="currentColor" />
+          <circle cx="12" cy="12" r="1.7" fill="currentColor" />
+          <circle cx="19" cy="12" r="1.7" fill="currentColor" />
+        </svg>
       </button>
     </span>
   );

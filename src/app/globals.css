@@ -601,24 +601,27 @@ body {
 }
 
 .course-dates-more-link {
-  margin-left: 0.28rem;
-  border: none;
-  padding: 0;
+  margin-left: 0.2rem;
+  border: 1px solid var(--primary-border);
+  border-radius: 999px;
+  padding: 0.04rem 0.26rem;
   background: transparent;
   color: var(--primary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.4;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 0.14rem;
+  line-height: 1;
   cursor: pointer;
-  transition: color var(--duration) var(--ease), text-decoration-color var(--duration) var(--ease);
+  transition: color var(--duration) var(--ease), border-color var(--duration) var(--ease), background-color var(--duration) var(--ease);
 }
 
 .course-dates-more-link:hover {
   color: var(--primary-hover);
-  text-decoration-color: var(--primary-border);
+  border-color: rgba(99, 102, 241, 0.36);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.course-dates-more-link svg {
+  display: block;
+  width: 0.82rem;
+  height: 0.82rem;
 }
 
 .course-dates-more-link:focus-visible {
