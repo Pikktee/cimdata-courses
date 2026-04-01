@@ -79,11 +79,11 @@
   --plan-replace-bg-hover: rgba(37, 99, 235, 0.15);
   --plan-replace-border: rgba(37, 99, 235, 0.38);
   --plan-replace-ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
-  --plan-remove-fg: #475569;
-  --plan-remove-bg: rgba(71, 85, 105, 0.09);
-  --plan-remove-bg-hover: rgba(71, 85, 105, 0.15);
-  --plan-remove-border: rgba(71, 85, 105, 0.32);
-  --plan-remove-ring: 0 0 0 3px rgba(71, 85, 105, 0.18);
+  --plan-remove-fg: #dc2626;
+  --plan-remove-bg: rgba(220, 38, 38, 0.1);
+  --plan-remove-bg-hover: rgba(220, 38, 38, 0.16);
+  --plan-remove-border: rgba(220, 38, 38, 0.34);
+  --plan-remove-ring: 0 0 0 3px rgba(220, 38, 38, 0.2);
 
   /* ─ Tooltips (shared, eine Optik überall) ─ */
   --tooltip-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -1024,8 +1024,8 @@ body {
 
 .course-plan-icon-btn-remove:hover:not(:disabled) {
   background: var(--plan-remove-bg-hover);
-  border-color: rgba(71, 85, 105, 0.4);
-  color: #334155;
+  border-color: rgba(220, 38, 38, 0.48);
+  color: #b91c1c;
 }
 
 .course-plan-icon-btn:disabled {
