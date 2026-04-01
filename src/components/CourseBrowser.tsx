@@ -389,7 +389,28 @@ export function CourseBrowser({
       <footer className="list-footer" aria-live="polite">
         <section className="refresh-summary-card" aria-label="Refresh-Status">
           <div className="refresh-summary-head">
-            <p className="refresh-summary-title">Daten-Synchronisation</p>
+            <div className="refresh-summary-title-wrap">
+              <p className="refresh-summary-title">Daten-Synchronisation</p>
+              <button
+                type="button"
+                className="manual-refresh-icon-btn"
+                onClick={handleManualRefresh}
+                disabled={isRefreshingNow}
+                aria-label="Daten jetzt aktualisieren"
+                title="Daten jetzt aktualisieren"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
             <span className={`refresh-status-badge refresh-status-badge-${latestStatusTone}`}>
               {latestStatusText}
             </span>
@@ -405,28 +426,7 @@ export function CourseBrowser({
             <span className="refresh-summary-time-label">{refreshTimestampLabel}</span>
             <strong>{refreshTimestampValue}</strong>
           </p>
-          <div className="refresh-summary-actions">
-            <button
-              type="button"
-              className="manual-refresh-icon-btn"
-              onClick={handleManualRefresh}
-              disabled={isRefreshingNow}
-              aria-label="Daten jetzt aktualisieren"
-              title="Daten jetzt aktualisieren"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden>
-                <path
-                  d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
-          </div>
+          {manualRefreshNotice && <p className="manual-refresh-notice">{manualRefreshNotice}</p>}
           {latestRefresh?.status === "failed" && latestRefresh.message && (
             <details className="refresh-error-details" open>
               <summary className="status-error">

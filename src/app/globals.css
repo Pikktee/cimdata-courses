@@ -697,6 +697,12 @@ body {
   color: #8a5f35;
 }
 
+.refresh-summary-title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+}
+
 .refresh-status-badge {
   display: inline-flex;
   align-items: center;
@@ -763,36 +769,27 @@ body {
   font-weight: 650;
 }
 
-.refresh-summary-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem;
-  padding-top: 0.24rem;
-  border-top: 1px solid rgba(170, 133, 90, 0.12);
-}
-
 .manual-refresh-icon-btn {
-  width: 1.95rem;
-  height: 1.95rem;
-  border-radius: 0.56rem;
-  border: 1px solid rgba(217, 80, 22, 0.28);
-  background: #fff4ea;
+  width: 1.34rem;
+  height: 1.34rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(217, 80, 22, 0.22);
+  background: #fff8f2;
   color: #8f3c13;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.24rem;
+  padding: 0.16rem;
   cursor: pointer;
 }
 
 .manual-refresh-icon-btn svg {
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 0.7rem;
+  height: 0.7rem;
 }
 
 .manual-refresh-icon-btn:hover:not(:disabled) {
-  background: #ffe8d9;
+  background: #ffefdf;
 }
 
 .manual-refresh-icon-btn:disabled {
@@ -805,10 +802,8 @@ body {
   outline-offset: 2px;
 }
 
-.refresh-summary-actions .manual-refresh-notice {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
+.manual-refresh-notice {
+  margin: 0.08rem 0 0;
   font-size: 0.77rem;
   color: #6b5439;
 }
