@@ -233,6 +233,14 @@ export function CourseBrowser({
     });
   }, []);
 
+  const handleRemoveCourseWithConfirm = useCallback((startDate: string) => {
+    const shouldRemove = window.confirm(
+      "Möchtest du diesen Kurs wirklich aus dem Studienplan entfernen?"
+    );
+    if (!shouldRemove) return;
+    handleRemoveCourse(startDate);
+  }, [handleRemoveCourse]);
+
   const toggleCourseMinimized = useCallback((courseId: number) => {
     setMinimizedCourseIds((current) => {
       if (current.includes(courseId)) {
@@ -466,7 +474,7 @@ export function CourseBrowser({
                           className="plan-remove-icon-btn"
                           aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
                           title="Entfernen"
-                          onClick={() => handleRemoveCourse(entry.startDate)}
+                          onClick={() => handleRemoveCourseWithConfirm(entry.startDate)}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden>
                             <path
