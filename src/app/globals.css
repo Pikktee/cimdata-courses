@@ -415,6 +415,11 @@ body {
   border-bottom: 1px solid rgba(79, 70, 229, 0.14);
 }
 
+/* Studienplan: Tooltips (z. B. Lücken) nicht an der Kartenkante abschneiden */
+.plan-panel.control-card--sidebar {
+  overflow: visible;
+}
+
 .control-head {
   display: flex;
   align-items: center;
@@ -778,6 +783,11 @@ body {
   right: auto;
   width: min(19rem, calc(100vw - 2rem));
   white-space: pre-line;
+}
+
+/* Lücken-Hinweis: Tooltip über Karte/Nachbarn legen */
+.plan-gap-hint--tooltip.has-tooltip::after {
+  z-index: 280;
 }
 
 .course-plan-tooltip-wrap.has-tooltip:hover::after,
@@ -1153,8 +1163,8 @@ body {
 .plan-stats {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2rem 0.55rem;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
   padding: 0;
   border: none;
   background: transparent;
@@ -1178,29 +1188,59 @@ body {
 }
 
 .plan-gap-hint {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  color: #d97706 !important;
-  font-weight: 650;
-  font-size: 0.74rem !important;
+  margin: 0.15rem 0 0;
+  flex: 1 1 100%;
+  display: block;
 }
 
 .plan-gap-hint-inner {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.32rem;
+  gap: 0.42rem;
   max-width: 100%;
+  padding: 0.3rem 0.5rem 0.3rem 0.38rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.98) 0%, rgba(255, 251, 235, 0.92) 100%);
+  color: #9a3412;
   cursor: help;
+  box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06);
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
+}
+
+.plan-gap-hint-inner:hover {
+  border-color: rgba(245, 158, 11, 0.38);
+  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.08);
+}
+
+.plan-gap-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.42rem;
+  height: 1.42rem;
+  border-radius: var(--radius-xs);
+  background: rgba(245, 158, 11, 0.14);
+  color: #c2410c;
 }
 
 .plan-gap-hint-icon {
-  flex-shrink: 0;
-  width: 0.92rem;
-  height: 0.92rem;
-  opacity: 0.95;
+  width: 0.78rem;
+  height: 0.78rem;
+  opacity: 1;
+}
+
+.plan-gap-hint-label {
+  font-size: 0.73rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  color: #9a3412;
 }
 
 .plan-course-list {

@@ -611,28 +611,30 @@ export function CourseBrowser({
                   {gapCount > 0 && (
                     <p className="plan-gap-hint">
                       <span
-                        className="plan-gap-hint-inner has-tooltip"
+                        className="plan-gap-hint-inner has-tooltip plan-gap-hint--tooltip"
                         data-tooltip={gapTooltipText}
                         aria-label={gapTooltipText}
                       >
-                        <svg className="plan-gap-hint-icon" viewBox="0 0 24 24" aria-hidden>
-                          <path
-                            d="M12 9v4M12 17h.01"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                          />
-                          <path
-                            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span>
+                        <span className="plan-gap-hint-badge" aria-hidden>
+                          <svg className="plan-gap-hint-icon" viewBox="0 0 24 24">
+                            <path
+                              d="M12 9v4M12 17h.01"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <span className="plan-gap-hint-label">
                           {gapCount}&nbsp;{gapCount === 1 ? "Lücke" : "Lücken"}
                         </span>
                       </span>
