@@ -436,6 +436,10 @@ body {
   overflow: visible;
 }
 
+.plan-panel.control-card--sidebar::before {
+  display: none;
+}
+
 .control-head {
   display: flex;
   align-items: center;
@@ -1313,6 +1317,10 @@ body {
   padding-bottom: 0.14rem;
 }
 
+.plan-course-item--before-active {
+  border-bottom-color: transparent;
+}
+
 .plan-course-item-add {
   animation: plan-item-add 360ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -1339,7 +1347,9 @@ body {
     rgba(79, 70, 229, 0.02) 100%
   );
   border-radius: 0;
-  box-shadow: none;
+  box-shadow:
+    inset 0 1px 0 var(--border),
+    inset 0 -1px 0 var(--border);
   padding: 0.22rem 1rem;
   margin: 0 -1rem;
 }

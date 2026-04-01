@@ -556,9 +556,12 @@ export function CourseBrowser({
                 </div>
 
                 <ul className="plan-course-list">
-                  {plannedEntries.map((entry) => {
+                  {plannedEntries.map((entry, index) => {
                     const isActiveStartSlot =
                       selectedDate !== "all" && entry.startDate === selectedDate;
+                    const isBeforeActiveStartSlot =
+                      selectedDate !== "all" &&
+                      plannedEntries[index + 1]?.startDate === selectedDate;
                     const gapAfter = planGapByAfterStartDate.get(entry.startDate);
                     return (
                     <Fragment key={`${entry.startDate}-${entry.course.id}`}>
@@ -568,6 +571,8 @@ export function CourseBrowser({
                             ? ` plan-course-item-${planEntryEffects[entry.startDate]}`
                             : ""
                         }${isActiveStartSlot ? " plan-course-item--active-date" : ""}${
+                          isBeforeActiveStartSlot ? " plan-course-item--before-active" : ""
+                        }${
                           gapAfter ? " plan-course-item--with-gap-after" : ""
                         }`}
                       >
