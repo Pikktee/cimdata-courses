@@ -69,6 +69,59 @@ export function CourseList({
 
         return (
           <article className="course-card" key={course.id}>
+            <div
+              className="course-plan-tooltip-wrap has-tooltip course-card-action"
+              data-tooltip={actionTooltip}
+            >
+              <button
+                type="button"
+                className={`course-plan-icon-btn ${
+                  isAssigned
+                    ? "course-plan-icon-btn-remove"
+                    : isReplacing
+                      ? "course-plan-icon-btn-replace"
+                      : "course-plan-icon-btn-add"
+                }`}
+                disabled={!isDateSelected}
+                onClick={() => (isAssigned ? onRemoveCourse(activeDate) : onAssignCourse(course.id))}
+                aria-label={actionLabel}
+              >
+                {isAssigned ? (
+                  <svg viewBox="0 0 24 24" aria-hidden>
+                    <path
+                      d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : isReplacing ? (
+                  <svg viewBox="0 0 24 24" aria-hidden>
+                    <path
+                      d="M7 7h10v10M17 7l-3 3M7 17l3-3"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" aria-hidden>
+                    <path
+                      d="M12 5v14M5 12h14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
             <h3>{course.title}</h3>
             <p className="course-meta">{course.area ?? "Bereich nicht angegeben"}</p>
             <ul>
@@ -79,65 +132,6 @@ export function CourseList({
                 <strong>Starttermine:</strong> {course.startDates.length || "k. A."}
               </li>
             </ul>
-            <div className="course-plan-controls">
-              <div className="course-plan-row">
-                <div
-                  className="course-plan-tooltip-wrap has-tooltip"
-                  data-tooltip={actionTooltip}
-                >
-                  <button
-                    type="button"
-                    className={`course-plan-icon-btn ${
-                      isAssigned
-                        ? "course-plan-icon-btn-remove"
-                        : isReplacing
-                          ? "course-plan-icon-btn-replace"
-                          : "course-plan-icon-btn-add"
-                    }`}
-                    disabled={!isDateSelected}
-                    onClick={() =>
-                      isAssigned ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
-                    }
-                    aria-label={actionLabel}
-                  >
-                    {isAssigned ? (
-                      <svg viewBox="0 0 24 24" aria-hidden>
-                        <path
-                          d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : isReplacing ? (
-                      <svg viewBox="0 0 24 24" aria-hidden>
-                        <path
-                          d="M7 7h10v10M17 7l-3 3M7 17l3-3"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" aria-hidden>
-                        <path
-                          d="M12 5v14M5 12h14"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
             <div className="course-card-footer">
               <a className="course-link" href={course.url} target="_blank" rel="noreferrer">
                 <span className="course-link-text">Kurs bei CIMDATA öffnen</span>

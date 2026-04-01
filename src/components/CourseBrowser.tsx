@@ -302,10 +302,6 @@ export function CourseBrowser({
             ) : (
               <>
                 <div className="plan-stats">
-                  <p>
-                    <strong>{plannedEntries.length}</strong>{" "}
-                    {plannedEntries.length === 1 ? "Kurs gewählt" : "Kurse gewählt"}
-                  </p>
                   {formattedPeriod && (
                     <p>
                       Zeitraum:{" "}
@@ -314,13 +310,11 @@ export function CourseBrowser({
                       </strong>
                     </p>
                   )}
-                  {gapHints.length > 0 ? (
+                  {gapHints.length > 0 && (
                     <p className="plan-gap-hint">
                       Achtung: {gapHints.length} zeitliche{" "}
                       {gapHints.length === 1 ? "Lücke erkannt." : "Lücken erkannt."}
                     </p>
-                  ) : (
-                    <p className="plan-gap-ok">Keine zeitlichen Lücken zwischen den Kursen.</p>
                   )}
                 </div>
 
@@ -338,8 +332,28 @@ export function CourseBrowser({
                 <ul className="plan-course-list">
                   {plannedEntries.map((entry) => (
                     <li key={`${entry.startDate}-${entry.course.id}`} className="plan-course-item">
-                      <div>
+                      <div className="plan-course-item-head">
                         <p className="plan-course-date">{formatDate(entry.startDate)}</p>
+                        <button
+                          type="button"
+                          className="plan-remove-icon-btn"
+                          aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
+                          title="Aus Studienplan entfernen"
+                          onClick={() => handleRemoveCourse(entry.startDate)}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden>
+                            <path
+                              d="M3 6h18M8 6v14h8V6M10 6V4h4v2"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div>
                         <p className="plan-course-title">{entry.course.title}</p>
                         <label className="plan-swap-label" htmlFor={`swap-${entry.startDate}`}>
                           Kurs tauschen:
@@ -359,13 +373,6 @@ export function CourseBrowser({
                           ))}
                         </select>
                       </div>
-                      <button
-                        type="button"
-                        className="plan-remove-btn"
-                        onClick={() => handleRemoveCourse(entry.startDate)}
-                      >
-                        Entfernen
-                      </button>
                     </li>
                   ))}
                 </ul>
