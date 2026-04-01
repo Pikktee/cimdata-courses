@@ -3,6 +3,8 @@ type DateFilterProps = {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  /** Zusätzliche Klassen für die umschließende Control-Card (z. B. Hervorhebung). */
+  className?: string;
 };
 
 function formatDate(isoDate: string): string {
@@ -15,10 +17,11 @@ export function DateFilter({
   options,
   value,
   onChange,
-  disabled = false
+  disabled = false,
+  className
 }: DateFilterProps) {
   return (
-    <div className="control-card">
+    <div className={className ? `control-card ${className}` : "control-card"}>
       <div className="control-head">
         <span className="control-label">
           <svg

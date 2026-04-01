@@ -1,3 +1,7 @@
+"use client";
+
+import { useId, useState } from "react";
+
 type CourseItem = {
   id: number;
   slug: string;
@@ -30,6 +34,9 @@ const MAX_INLINE_START_DATES = 4;
 const PREVIEW_BEFORE_MORE = 3;
 
 function CourseStartDates({ startDates }: { startDates: string[] }) {
+  const panelId = useId();
+  const [expanded, setExpanded] = useState(false);
+
   if (!startDates.length) {
     return <>k. A.</>;
   }
@@ -44,23 +51,44 @@ function CourseStartDates({ startDates }: { startDates: string[] }) {
 
   const head = sorted.slice(0, PREVIEW_BEFORE_MORE);
   const tail = sorted.slice(PREVIEW_BEFORE_MORE);
+  const moreLabel =
+    tail.length === 1 ? "1 weiterer Termin" : `${tail.length} weitere Termine`;
 
   return (
-    <span className="course-dates-block">
+    <div className="course-dates-block">
       <span className="course-dates-inline">{head.map(formatDate).join(" · ")}</span>
-      <details className="course-dates-details">
-        <summary>
-          {tail.length === 1
-            ? "+1 weiterer Termin"
-            : `+${tail.length} weitere Termine`}
-        </summary>
-        <ul className="course-dates-overflow-list">
-          {tail.map((iso) => (
-            <li key={iso}>{formatDate(iso)}</li>
-          ))}
-        </ul>
-      </details>
-    </span>
+      <button
+        type="button"
+        className={`course-dates-toggle${expanded ? " course-dates-toggle--open" : ""}`}
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <span className="course-dates-toggle-chevron" aria-hidden>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+        <span className="course-dates-toggle-label">{expanded ? "Weniger anzeigen" : moreLabel}</span>
+      </button>
+      <div
+        id={panelId}
+        className={`course-dates-panel-anim${expanded ? " course-dates-panel-anim--open" : ""}`}
+        role="region"
+        aria-label="Weitere Starttermine"
+        aria-hidden={!expanded}
+      >
+        <div className="course-dates-panel-inner">
+          <ul className="course-dates-expanded-list">
+            {tail.map((iso) => (
+              <li key={iso}>
+                <span className="course-dates-chip">{formatDate(iso)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
 

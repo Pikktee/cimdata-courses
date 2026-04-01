@@ -321,10 +321,11 @@ export function CourseBrowser({
               value={selectedDate}
               onChange={handleDateChange}
               disabled={false}
+              className="control-card--sidebar"
             />
           </section>
 
-          <aside className="plan-panel control-card" aria-live="polite">
+          <aside className="plan-panel control-card control-card--sidebar" aria-live="polite">
             <div className="control-head">
               <span className="control-label">
                 <svg
