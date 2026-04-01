@@ -114,6 +114,10 @@ export function CourseBrowser({
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
   const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
   const [planActionNotice, setPlanActionNotice] = useState<string | null>(null);
+  const [planEntryEffects, setPlanEntryEffects] = useState<
+    Record<string, "add" | "replace" | "removing">
+  >({});
+  const [planPendingRemoval, setPlanPendingRemoval] = useState<Record<string, boolean>>({});
   const [isRefreshingNow, startRefreshTransition] = useTransition();
 
   const handleDateChange = useCallback((value: string) => {
@@ -209,10 +213,25 @@ export function CourseBrowser({
         return;
       }
       setPlanActionNotice(null);
+      const previousCourseId = selectedCoursesByDate[selectedDate];
+      const effectType =
+        typeof previousCourseId === "number" && previousCourseId !== courseId ? "replace" : "add";
       setSelectedCoursesByDate((current) => ({
         ...current,
         [selectedDate]: courseId
       }));
+      setPlanEntryEffects((current) => ({
+        ...current,
+        [selectedDate]: effectType
+      }));
+      window.setTimeout(() => {
+        setPlanEntryEffects((current) => {
+          if (!current[selectedDate] || current[selectedDate] !== effectType) return current;
+          const next = { ...current };
+          delete next[selectedDate];
+          return next;
+        });
+      }, 650);
     },
     [selectedDate, selectedCoursesByDate, coursesById]
   );
@@ -234,12 +253,33 @@ export function CourseBrowser({
   }, []);
 
   const handleRemoveCourseWithConfirm = useCallback((startDate: string) => {
+    if (planPendingRemoval[startDate]) return;
     const shouldRemove = window.confirm(
       "Möchtest du diesen Kurs wirklich aus dem Studienplan entfernen?"
     );
     if (!shouldRemove) return;
-    handleRemoveCourse(startDate);
-  }, [handleRemoveCourse]);
+    setPlanPendingRemoval((current) => ({
+      ...current,
+      [startDate]: true
+    }));
+    setPlanEntryEffects((current) => ({
+      ...current,
+      [startDate]: "removing"
+    }));
+    window.setTimeout(() => {
+      handleRemoveCourse(startDate);
+      setPlanPendingRemoval((current) => {
+        const next = { ...current };
+        delete next[startDate];
+        return next;
+      });
+      setPlanEntryEffects((current) => {
+        const next = { ...current };
+        delete next[startDate];
+        return next;
+      });
+    }, 180);
+  }, [handleRemoveCourse, planPendingRemoval]);
 
   const toggleCourseMinimized = useCallback((courseId: number) => {
     setMinimizedCourseIds((current) => {
@@ -256,6 +296,8 @@ export function CourseBrowser({
     );
     if (!shouldClear) return;
     setSelectedCoursesByDate({});
+    setPlanEntryEffects({});
+    setPlanPendingRemoval({});
     setManualRefreshNotice("Studienplan wurde zurückgesetzt.");
   }, []);
 
@@ -458,7 +500,14 @@ export function CourseBrowser({
 
                 <ul className="plan-course-list">
                   {plannedEntries.map((entry) => (
-                    <li key={`${entry.startDate}-${entry.course.id}`} className="plan-course-item">
+                    <li
+                      key={`${entry.startDate}-${entry.course.id}`}
+                      className={`plan-course-item${
+                        planEntryEffects[entry.startDate]
+                          ? ` plan-course-item-${planEntryEffects[entry.startDate]}`
+                          : ""
+                      }`}
+                    >
                       <div className="plan-course-item-head">
                         <button
                           type="button"
@@ -474,6 +523,7 @@ export function CourseBrowser({
                           className="plan-remove-icon-btn"
                           aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
                           title="Entfernen"
+                          disabled={Boolean(planPendingRemoval[entry.startDate])}
                           onClick={() => handleRemoveCourseWithConfirm(entry.startDate)}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden>

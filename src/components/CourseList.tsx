@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type CourseItem = {
   id: number;
@@ -92,8 +92,27 @@ export function CourseList({
   isCourseBlocked
 }: CourseListProps) {
   const isDateSelected = activeDate !== "all";
+  const [minimizingCourseIds, setMinimizingCourseIds] = useState<number[]>([]);
+  const minimizeTimeoutsRef = useRef<number[]>([]);
   const visibleCourses = courses.filter((course) => !isMinimized(course.id));
   const minimizedCourses = courses.filter((course) => isMinimized(course.id));
+
+  useEffect(() => {
+    return () => {
+      minimizeTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, []);
+
+  const startMinimize = (courseId: number) => {
+    if (minimizingCourseIds.includes(courseId)) return;
+    setMinimizingCourseIds((current) => [...current, courseId]);
+    const timeoutId = window.setTimeout(() => {
+      onToggleMinimized(courseId);
+      setMinimizingCourseIds((current) => current.filter((id) => id !== courseId));
+      minimizeTimeoutsRef.current = minimizeTimeoutsRef.current.filter((id) => id !== timeoutId);
+    }, 180);
+    minimizeTimeoutsRef.current.push(timeoutId);
+  };
 
   if (courses.length === 0) {
     return (
@@ -142,7 +161,7 @@ export function CourseList({
 
             return (
               <article
-                className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}`}
+                className={`course-card${isDateSelected && isAssigned ? " course-card-in-plan" : ""}${minimizingCourseIds.includes(course.id) ? " course-card-minimizing" : ""}`}
                 key={course.id}
               >
                 <div className="course-card-corner">
@@ -153,7 +172,7 @@ export function CourseList({
                     <button
                       type="button"
                       className="course-minimize-btn"
-                      onClick={() => onToggleMinimized(course.id)}
+                      onClick={() => startMinimize(course.id)}
                       aria-label="Kurs minimieren"
                     >
                       <svg viewBox="0 0 24 24" aria-hidden>
