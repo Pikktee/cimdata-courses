@@ -591,9 +591,10 @@ export function CourseBrowser({
                         <button
                           type="button"
                           className="plan-course-date-link"
-                          onClick={() => handleDateChange(entry.startDate)}
-                          aria-label={`Startdatum ${formatDate(entry.startDate)} im Filter auswählen`}
-                          title={`Startdatum ${formatDate(entry.startDate)} auswählen`}
+                          onClick={() =>
+                            handleJumpToCourseFromPlan(entry.startDate, entry.course.id)
+                          }
+                          aria-label={`Startdatum ${formatDate(entry.startDate)} wählen und zur Kurskarte scrollen`}
                         >
                           {formatDate(entry.startDate)}
                         </button>
@@ -624,9 +625,6 @@ export function CourseBrowser({
                         }
                         aria-label={`Zur Kurskarte scrollen: ${entry.course.title}`}
                       >
-                        {entry.course.area ? (
-                          <span className="plan-course-area">{entry.course.area}</span>
-                        ) : null}
                         <span className="plan-course-title">{entry.course.title}</span>
                         {entry.course.scheduleText ? (
                           <span className="plan-course-detail">{entry.course.scheduleText}</span>
