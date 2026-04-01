@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Fragment,
   useCallback,
   useEffect,
   useId,
@@ -461,7 +462,7 @@ export function CourseBrowser({
 
   /** Freie Kalendertage zwischen Kursende (exkl.) und nächstem Kursstart (exkl.), mind. 14 Tage. */
   const planGapRanges = useMemo(() => {
-    const ranges: { from: string; to: string }[] = [];
+    const ranges: { afterStartDate: string; from: string; to: string }[] = [];
     for (let i = 1; i < plannedEntries.length; i += 1) {
       const previousEntry = plannedEntries[i - 1];
       const currentEntry = plannedEntries[i];
@@ -476,18 +477,14 @@ export function CourseBrowser({
       const from = previousEndExclusive.toISOString().slice(0, 10);
       const lastFree = new Date(currentStart.getTime() - MS_PER_DAY);
       const to = lastFree.toISOString().slice(0, 10);
-      ranges.push({ from, to });
+      ranges.push({ afterStartDate: previousEntry.startDate, from, to });
     }
     return ranges;
   }, [plannedEntries]);
 
-  const gapCount = planGapRanges.length;
-
-  const gapTooltipText = useMemo(() => {
-    if (planGapRanges.length === 0) return "";
-    const lines = planGapRanges.map((g) => `• ${formatDate(g.from)} – ${formatDate(g.to)}`);
-    return `Zeiträume mit mindestens 14 freien Tagen zwischen zwei Kursen:\n${lines.join("\n")}`;
-  }, [planGapRanges, formatDate]);
+  const planGapByAfterStartDate = useMemo(() => {
+    return new Map(planGapRanges.map((gap) => [gap.afterStartDate, gap]));
+  }, [planGapRanges]);
 
   const handleManualRefresh = useCallback(() => {
     setManualRefreshNotice(null);
@@ -608,92 +605,69 @@ export function CourseBrowser({
                       </>
                     )}
                   </p>
-                  {gapCount > 0 && (
-                    <p className="plan-gap-hint">
-                      <span
-                        className="plan-gap-hint-inner has-tooltip plan-gap-hint--tooltip"
-                        data-tooltip={gapTooltipText}
-                        aria-label={gapTooltipText}
-                      >
-                        <span className="plan-gap-hint-badge" aria-hidden>
-                          <svg className="plan-gap-hint-icon" viewBox="0 0 24 24">
-                            <path
-                              d="M12 9v4M12 17h.01"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                            <path
-                              d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </span>
-                        <span className="plan-gap-hint-label">
-                          {gapCount}&nbsp;{gapCount === 1 ? "Lücke" : "Lücken"}
-                        </span>
-                      </span>
-                    </p>
-                  )}
                 </div>
 
                 <ul className="plan-course-list">
                   {plannedEntries.map((entry) => {
                     const isActiveStartSlot =
                       selectedDate !== "all" && entry.startDate === selectedDate;
+                    const gapAfter = planGapByAfterStartDate.get(entry.startDate);
                     return (
-                    <li
-                      key={`${entry.startDate}-${entry.course.id}`}
-                      className={`plan-course-item${
-                        planEntryEffects[entry.startDate]
-                          ? ` plan-course-item-${planEntryEffects[entry.startDate]}`
-                          : ""
-                      }${isActiveStartSlot ? " plan-course-item--active-date" : ""}`}
-                    >
-                      <button
-                        type="button"
-                        className="plan-course-entry-link"
-                        onClick={() =>
-                          handleJumpToCourseFromPlan(entry.startDate, entry.course.id)
-                        }
-                        aria-label={`Startdatum ${formatDate(entry.startDate)} wählen und zur Kurskarte scrollen: ${entry.course.title}`}
+                    <Fragment key={`${entry.startDate}-${entry.course.id}`}>
+                      <li
+                        className={`plan-course-item${
+                          planEntryEffects[entry.startDate]
+                            ? ` plan-course-item-${planEntryEffects[entry.startDate]}`
+                            : ""
+                        }${isActiveStartSlot ? " plan-course-item--active-date" : ""}`}
                       >
-                        <span className="plan-course-date">{formatDate(entry.startDate)}</span>
-                        <span className="plan-course-title">{entry.course.title}</span>
-                        {entry.course.scheduleText ? (
-                          <span className="plan-course-detail">{entry.course.scheduleText}</span>
-                        ) : null}
-                        {entry.course.locationText ? (
-                          <span className="plan-course-detail">{entry.course.locationText}</span>
-                        ) : null}
-                        <span className="plan-course-duration">
-                          Dauer: {entry.course.durationText ?? "k. A."}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className="plan-remove-icon-btn"
-                        aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
-                        title="Entfernen"
-                        disabled={Boolean(planPendingRemoval[entry.startDate])}
-                        onClick={() => openRemoveCourseDialog(entry.startDate)}
-                      >
-                        <svg viewBox="0 0 24 24" aria-hidden>
-                          <path
-                            d="M18 6 6 18M6 6l12 12"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </button>
-                    </li>
+                        <button
+                          type="button"
+                          className="plan-course-entry-link"
+                          onClick={() =>
+                            handleJumpToCourseFromPlan(entry.startDate, entry.course.id)
+                          }
+                          aria-label={`Startdatum ${formatDate(entry.startDate)} wählen und zur Kurskarte scrollen: ${entry.course.title}`}
+                        >
+                          <span className="plan-course-date">{formatDate(entry.startDate)}</span>
+                          <span className="plan-course-title">{entry.course.title}</span>
+                          {entry.course.scheduleText ? (
+                            <span className="plan-course-detail">{entry.course.scheduleText}</span>
+                          ) : null}
+                          {entry.course.locationText ? (
+                            <span className="plan-course-detail">{entry.course.locationText}</span>
+                          ) : null}
+                          <span className="plan-course-duration">
+                            Dauer: {entry.course.durationText ?? "k. A."}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="plan-remove-icon-btn"
+                          aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
+                          title="Entfernen"
+                          disabled={Boolean(planPendingRemoval[entry.startDate])}
+                          onClick={() => openRemoveCourseDialog(entry.startDate)}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden>
+                            <path
+                              d="M18 6 6 18M6 6l12 12"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </li>
+                      {gapAfter ? (
+                        <li className="plan-gap-item" aria-label={`Lücke von ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)}`}>
+                          <span className="plan-gap-chip">
+                            Lücke: {formatDate(gapAfter.from)} - {formatDate(gapAfter.to)}
+                          </span>
+                        </li>
+                      ) : null}
+                    </Fragment>
                     );
                   })}
                 </ul>
