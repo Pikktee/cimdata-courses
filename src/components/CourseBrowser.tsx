@@ -48,12 +48,6 @@ function parseDurationDays(durationText: string | null): number {
   return 14;
 }
 
-function parseDurationSlots(durationText: string | null): number {
-  if (!durationText) return 1;
-  if (/\b4\b/.test(durationText)) return 2;
-  return 1;
-}
-
 function formatDateTime(value: string | null): string {
   if (!value) return "k. A.";
   return new Date(value).toLocaleString("de-DE");
@@ -169,19 +163,18 @@ export function CourseBrowser({
       const currentEntry = plannedEntries[i];
       const previousStart = parseIsoDate(previousEntry.startDate);
       const currentStart = parseIsoDate(currentEntry.startDate);
-      const previousSlotIndex = Math.floor(previousStart.getTime() / MS_PER_DAY / 14);
-      const currentSlotIndex = Math.floor(currentStart.getTime() / MS_PER_DAY / 14);
-      const slotDistance = currentSlotIndex - previousSlotIndex;
-      const coveredSlots = parseDurationSlots(previousEntry.course.durationText);
-      const gapSlots = slotDistance - coveredSlots;
-
-      if (gapSlots > 0) {
-        gaps.push({
-          from: previousEntry.startDate,
-          to: currentEntry.startDate,
-          gapSlots
-        });
-      }
+      const previousDurationDays = parseDurationDays(previousEntry.course.durationText);
+      const previousEndExclusive = new Date(
+        previousStart.getTime() + previousDurationDays * MS_PER_DAY
+      );
+      const gapFreeDays = Math.round((currentStart.getTime() - previousEndExclusive.getTime()) / MS_PER_DAY);
+      if (gapFreeDays < 14) continue;
+      const gapSlots = Math.floor(gapFreeDays / 14);
+      gaps.push({
+        from: previousEntry.startDate,
+        to: currentEntry.startDate,
+        gapSlots
+      });
     }
 
     return gaps;
