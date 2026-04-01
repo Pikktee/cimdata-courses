@@ -17,22 +17,30 @@ export default async function HomePage() {
   return (
     <main className="app-shell">
       <header className="hero">
-        <p className="eyebrow">CIMDATA KURSE</p>
-        <h1>Starttermine</h1>
-        <div className="hero-copy-track">
-          <p className="hero-copy hero-copy-nowrap">
-            Hier findest du alle verfügbaren{" "}
-            <a
-              className="hero-copy-link"
-              href="https://www.cimdata.de/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Cimdata
-            </a>
-            -Kurse mit ihren konkreten Startterminen auf einen Blick.
-          </p>
+        <div className="hero-topline">
+          <p className="eyebrow">CIMDATA WEITERBILDUNG</p>
+          <div className="hero-badges" aria-label="Übersicht">
+            <span>{initialData.courses.length} Kurse</span>
+            <span>{initialData.availableStartDates.length} Starttermine</span>
+          </div>
         </div>
+
+        <h1>Cimdata Studienplaner</h1>
+        <p className="hero-copy">
+          Plane deinen persönlichen Lernpfad mit konkreten Startterminen, tausche Kurse flexibel
+          pro Termin aus und behalte Zeitraum sowie zeitliche Lücken jederzeit im Blick.
+        </p>
+        <p className="hero-copy hero-copy-secondary">
+          Datenquelle:{" "}
+          <a
+            className="hero-copy-link"
+            href="https://www.cimdata.de/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            cimdata.de
+          </a>
+        </p>
       </header>
       <CourseBrowser
         initial={{
