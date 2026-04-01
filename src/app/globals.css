@@ -224,15 +224,11 @@ body {
 
 .planner-sidebar {
   position: sticky;
-  bottom: 1rem;
-  top: auto;
+  top: 1rem;
   align-self: start;
   display: grid;
   gap: 0.55rem;
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+  /* Kein overflow hier: sonst greift position:sticky nicht zuverlässig am Viewport. */
 }
 
 /* ══════════════════════════════════════════════
@@ -660,14 +656,20 @@ body {
 
 .plan-panel {
   display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+}
+
+.plan-panel-body {
+  display: grid;
   gap: 0.42rem;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0.5rem 0 0;
-  box-shadow: none;
-  border-top: 1px solid var(--border);
-  margin-top: 0.1rem;
+  min-height: 0;
+  max-height: min(65vh, 28rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.2rem;
+  margin-right: -0.15rem;
 }
 
 .plan-panel-head {
@@ -681,11 +683,11 @@ body {
 
 .plan-panel-eyebrow {
   margin: 0;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 0.62rem;
-  font-weight: 700;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 640;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .plan-panel h2 {
@@ -1279,10 +1281,14 @@ body {
 
   .planner-sidebar {
     position: static;
-    bottom: auto;
+    top: auto;
+  }
+
+  .plan-panel-body {
     max-height: none;
     overflow-y: visible;
-    scrollbar-gutter: auto;
+    padding-right: 0;
+    margin-right: 0;
   }
 
   .course-grid {

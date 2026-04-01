@@ -286,7 +286,7 @@ export function CourseBrowser({
             />
           </section>
 
-          <aside className="plan-panel" aria-live="polite">
+          <aside className="plan-panel control-card" aria-live="polite">
             <div className="plan-panel-head">
               <div className="plan-panel-head-titles">
                 <p className="plan-panel-eyebrow">Studienplan</p>
@@ -294,6 +294,7 @@ export function CourseBrowser({
               </div>
             </div>
 
+            <div className="plan-panel-body">
             {plannedEntries.length === 0 ? (
               <p className="plan-empty">
                 Wähle ein Startdatum und füge Kurse aus dem Raster hinzu, um deinen Studienplan zu erstellen.
@@ -378,6 +379,7 @@ export function CourseBrowser({
                 </button>
               </>
             )}
+            </div>
           </aside>
         </aside>
 
