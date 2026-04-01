@@ -76,9 +76,9 @@
   --plan-remove-border: rgba(71, 85, 105, 0.3);
   --plan-remove-ring: 0 0 0 3px rgba(71, 85, 105, 0.18);
 
-  /* ─ Tooltips (shared) ─ */
+  /* ─ Tooltips (shared, eine Optik überall) ─ */
   --tooltip-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --tooltip-show-delay: 0.42s;
+  --tooltip-show-delay: 0.58s;
   --tooltip-show-dur: 0.22s;
   --tooltip-hide-dur: 0.1s;
   --tooltip-bg: rgba(15, 23, 42, 0.94);
@@ -93,14 +93,6 @@
   --tooltip-line-height: 1.5;
   --tooltip-pad-y: 0.52rem;
   --tooltip-pad-x: 0.72rem;
-  /* Hell auf dunklem Hero */
-  --tooltip-hero-bg: rgba(255, 255, 255, 0.98);
-  --tooltip-hero-fg: #0f172a;
-  --tooltip-hero-border: rgba(15, 23, 42, 0.09);
-  --tooltip-hero-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
-    0 12px 40px -12px rgba(30, 27, 75, 0.45),
-    0 4px 20px -4px rgba(0, 0, 0, 0.2);
 }
 
 /* ══ Reset ══ */
@@ -282,15 +274,15 @@ body {
   box-sizing: border-box;
   padding: var(--tooltip-pad-y) var(--tooltip-pad-x);
   border-radius: var(--tooltip-radius);
-  border: 1px solid var(--tooltip-hero-border);
-  background: var(--tooltip-hero-bg);
-  color: var(--tooltip-hero-fg);
+  border: 1px solid var(--tooltip-border);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
   font-size: var(--tooltip-font);
   font-weight: 550;
   line-height: var(--tooltip-line-height);
   letter-spacing: 0.01em;
   text-align: left;
-  box-shadow: var(--tooltip-hero-shadow);
+  box-shadow: var(--tooltip-shadow);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   pointer-events: none;
@@ -303,8 +295,9 @@ body {
     visibility 0ms linear var(--tooltip-hide-dur);
 }
 
+/* Nur Hover oder Tastatur-Fokus (:focus-visible), nicht :focus nach Mausklick */
 .hero-share-wrap.has-tooltip:hover::after,
-.hero-share-wrap.has-tooltip:focus-within::after {
+.hero-share-wrap.has-tooltip:has(.hero-share-btn:focus-visible)::after {
   opacity: 1;
   visibility: visible;
   transform: translate3d(0, 0, 0);
@@ -869,9 +862,17 @@ body {
 }
 
 .course-plan-tooltip-wrap.has-tooltip:hover::after,
-.course-plan-tooltip-wrap.has-tooltip:focus-within::after,
-.plan-gap-hint-inner.has-tooltip:hover::after,
-.plan-gap-hint-inner.has-tooltip:focus-within::after {
+.course-plan-tooltip-wrap.has-tooltip:has(button:focus-visible)::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity var(--tooltip-show-dur) var(--tooltip-ease) var(--tooltip-show-delay),
+    transform var(--tooltip-show-dur) var(--tooltip-ease) var(--tooltip-show-delay),
+    visibility 0ms linear 0ms;
+}
+
+.plan-gap-hint-inner.has-tooltip:hover::after {
   opacity: 1;
   visibility: visible;
   transform: translate3d(0, 0, 0);
@@ -1610,7 +1611,7 @@ body {
 }
 
 .footer-sync-btn-wrap.has-tooltip-footer-sync-error:hover::after,
-.footer-sync-btn-wrap.has-tooltip-footer-sync-error:focus-within::after {
+.footer-sync-btn-wrap.has-tooltip-footer-sync-error:has(button:focus-visible)::after {
   opacity: 1;
   visibility: visible;
   transform: translate3d(0, 0, 0);
