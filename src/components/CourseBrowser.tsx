@@ -198,6 +198,10 @@ export function CourseBrowser({
   }, []);
 
   const clearStudyPlan = useCallback(() => {
+    const shouldClear = window.confirm(
+      "Möchtest du den Studienplan wirklich komplett zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden."
+    );
+    if (!shouldClear) return;
     setSelectedCoursesByDate({});
     setManualRefreshNotice("Studienplan wurde zurückgesetzt.");
   }, []);
@@ -323,7 +327,15 @@ export function CourseBrowser({
                   {plannedEntries.map((entry) => (
                     <li key={`${entry.startDate}-${entry.course.id}`} className="plan-course-item">
                       <div className="plan-course-item-head">
-                        <p className="plan-course-date">{formatDate(entry.startDate)}</p>
+                        <button
+                          type="button"
+                          className="plan-course-date-link"
+                          onClick={() => handleDateChange(entry.startDate)}
+                          aria-label={`Startdatum ${formatDate(entry.startDate)} im Filter auswählen`}
+                          title={`Startdatum ${formatDate(entry.startDate)} auswählen`}
+                        >
+                          {formatDate(entry.startDate)}
+                        </button>
                         <button
                           type="button"
                           className="plan-remove-icon-btn"

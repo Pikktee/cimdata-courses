@@ -825,6 +825,33 @@ body {
   letter-spacing: 0.01em;
 }
 
+.plan-course-date-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  color: var(--primary);
+  font-size: 0.74rem;
+  font-weight: 720;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.16rem;
+  transition: text-decoration-color var(--duration) var(--ease), color var(--duration) var(--ease);
+}
+
+.plan-course-date-link:hover {
+  color: var(--primary-hover);
+  text-decoration-color: var(--primary-border);
+}
+
+.plan-course-date-link:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 2px;
+}
+
 .plan-course-title {
   margin: 0.1rem 0 0;
   font-size: 0.86rem;
