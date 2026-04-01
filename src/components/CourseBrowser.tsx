@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition
+} from "react";
 import { triggerCourseRefresh } from "@/app/actions/refreshCourses";
 import { CourseList } from "@/components/CourseList";
 import { DateFilter } from "@/components/DateFilter";
@@ -135,11 +143,18 @@ export function CourseBrowser({
     Record<string, "add" | "replace" | "removing">
   >({});
   const [planPendingRemoval, setPlanPendingRemoval] = useState<Record<string, boolean>>({});
+  const [planConfirmDialog, setPlanConfirmDialog] = useState<
+    | null
+    | { kind: "remove"; startDate: string; courseTitle: string }
+    | { kind: "clear"; courseCount: number }
+  >(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
   const [scrollToCourseRequest, setScrollToCourseRequest] = useState<{
     courseId: number;
     requestId: number;
   } | null>(null);
+  const planConfirmTitleId = useId();
+  const planConfirmCancelRef = useRef<HTMLButtonElement>(null);
 
   const handleDateChange = useCallback((value: string) => {
     setSelectedDate(value);
@@ -310,34 +325,48 @@ export function CourseBrowser({
     });
   }, []);
 
-  const handleRemoveCourseWithConfirm = useCallback((startDate: string) => {
-    if (planPendingRemoval[startDate]) return;
-    const shouldRemove = window.confirm(
-      "Möchtest du diesen Kurs wirklich aus dem Studienplan entfernen?"
-    );
-    if (!shouldRemove) return;
-    setPlanPendingRemoval((current) => ({
-      ...current,
-      [startDate]: true
-    }));
-    setPlanEntryEffects((current) => ({
-      ...current,
-      [startDate]: "removing"
-    }));
-    window.setTimeout(() => {
-      handleRemoveCourse(startDate);
-      setPlanPendingRemoval((current) => {
-        const next = { ...current };
-        delete next[startDate];
-        return next;
+  const performRemoveFromPlan = useCallback(
+    (startDate: string) => {
+      if (planPendingRemoval[startDate]) return;
+      setPlanPendingRemoval((current) => ({
+        ...current,
+        [startDate]: true
+      }));
+      setPlanEntryEffects((current) => ({
+        ...current,
+        [startDate]: "removing"
+      }));
+      window.setTimeout(() => {
+        handleRemoveCourse(startDate);
+        setPlanPendingRemoval((current) => {
+          const next = { ...current };
+          delete next[startDate];
+          return next;
+        });
+        setPlanEntryEffects((current) => {
+          const next = { ...current };
+          delete next[startDate];
+          return next;
+        });
+      }, 180);
+    },
+    [handleRemoveCourse, planPendingRemoval]
+  );
+
+  const openRemoveCourseDialog = useCallback(
+    (startDate: string) => {
+      if (planPendingRemoval[startDate]) return;
+      const courseId = selectedCoursesByDate[startDate];
+      const course =
+        typeof courseId === "number" ? coursesById.get(courseId) : undefined;
+      setPlanConfirmDialog({
+        kind: "remove",
+        startDate,
+        courseTitle: course?.title ?? "diesen Kurs"
       });
-      setPlanEntryEffects((current) => {
-        const next = { ...current };
-        delete next[startDate];
-        return next;
-      });
-    }, 180);
-  }, [handleRemoveCourse, planPendingRemoval]);
+    },
+    [planPendingRemoval, selectedCoursesByDate, coursesById]
+  );
 
   const toggleCourseMinimized = useCallback((courseId: number) => {
     setMinimizedCourseIds((current) => {
@@ -367,16 +396,50 @@ export function CourseBrowser({
     [handleDateChange, ensureCourseVisibleInList]
   );
 
-  const clearStudyPlan = useCallback(() => {
-    const shouldClear = window.confirm(
-      "Möchtest du den Studienplan wirklich komplett zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden."
-    );
-    if (!shouldClear) return;
+  const performClearStudyPlan = useCallback(() => {
     setSelectedCoursesByDate({});
     setPlanEntryEffects({});
     setPlanPendingRemoval({});
     setManualRefreshNotice("Studienplan wurde zurückgesetzt.");
+    setPlanConfirmDialog(null);
   }, []);
+
+  const openClearStudyPlanDialog = useCallback(() => {
+    const courseCount = Object.keys(selectedCoursesByDate).length;
+    if (courseCount === 0) return;
+    setPlanConfirmDialog({ kind: "clear", courseCount });
+  }, [selectedCoursesByDate]);
+
+  const confirmPlanDialog = useCallback(() => {
+    if (!planConfirmDialog) return;
+    if (planConfirmDialog.kind === "remove") {
+      const { startDate } = planConfirmDialog;
+      setPlanConfirmDialog(null);
+      performRemoveFromPlan(startDate);
+      return;
+    }
+    performClearStudyPlan();
+  }, [planConfirmDialog, performRemoveFromPlan, performClearStudyPlan]);
+
+  useEffect(() => {
+    if (!planConfirmDialog) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setPlanConfirmDialog(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [planConfirmDialog]);
+
+  useEffect(() => {
+    if (!planConfirmDialog) return;
+    const id = window.requestAnimationFrame(() => {
+      planConfirmCancelRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [planConfirmDialog]);
 
   const formattedPeriod = useMemo(() => {
     if (plannedEntries.length === 0) return null;
@@ -604,7 +667,7 @@ export function CourseBrowser({
                           aria-label={`Kurs am ${formatDate(entry.startDate)} entfernen`}
                           title="Entfernen"
                           disabled={Boolean(planPendingRemoval[entry.startDate])}
-                          onClick={() => handleRemoveCourseWithConfirm(entry.startDate)}
+                          onClick={() => openRemoveCourseDialog(entry.startDate)}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden>
                             <path
@@ -644,7 +707,7 @@ export function CourseBrowser({
             </div>
 
             {plannedEntries.length > 0 && (
-              <button type="button" className="plan-clear-btn" onClick={clearStudyPlan}>
+              <button type="button" className="plan-clear-btn" onClick={openClearStudyPlanDialog}>
                 Plan zurücksetzen
               </button>
             )}
@@ -736,6 +799,68 @@ export function CourseBrowser({
           </p>
         ) : null}
       </footer>
+
+      {planConfirmDialog ? (
+        <div
+          className="plan-confirm-backdrop"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setPlanConfirmDialog(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={planConfirmTitleId}
+            className="plan-confirm-dialog"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <h2 id={planConfirmTitleId} className="plan-confirm-title">
+              {planConfirmDialog.kind === "remove"
+                ? "Kurs entfernen?"
+                : "Studienplan zurücksetzen?"}
+            </h2>
+            <p className="plan-confirm-body">
+              {planConfirmDialog.kind === "remove" ? (
+                <>
+                  <strong>{planConfirmDialog.courseTitle}</strong>
+                  {" · "}
+                  {formatDate(planConfirmDialog.startDate)}
+                  <br />
+                  Dieser Kurs wird aus dem Studienplan entfernt. Du kannst ihn später wieder
+                  hinzufügen.
+                </>
+              ) : (
+                <>
+                  Alle{" "}
+                  <strong>
+                    {planConfirmDialog.courseCount}{" "}
+                    {planConfirmDialog.courseCount === 1 ? "Kurs" : "Kurse"}
+                  </strong>{" "}
+                  werden aus dem Plan entfernt. Das kann nicht rückgängig gemacht werden.
+                </>
+              )}
+            </p>
+            <div className="plan-confirm-actions">
+              <button
+                ref={planConfirmCancelRef}
+                type="button"
+                className="plan-confirm-btn plan-confirm-btn--secondary"
+                onClick={() => setPlanConfirmDialog(null)}
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                className="plan-confirm-btn plan-confirm-btn--danger"
+                onClick={confirmPlanDialog}
+              >
+                {planConfirmDialog.kind === "remove" ? "Entfernen" : "Zurücksetzen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
