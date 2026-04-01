@@ -21,10 +21,6 @@ export default async function HomePage() {
         <div className="hero-topline">
           <p className="eyebrow">Weiterbildung planen</p>
           <div className="hero-actions">
-            <div className="hero-badges" aria-label="Übersicht">
-              <span>{initialData.courses.length} Kurse</span>
-              <span>{initialData.availableStartDates.length} Termine</span>
-            </div>
             <PlanShareButton />
           </div>
         </div>
