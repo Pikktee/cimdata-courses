@@ -500,14 +500,15 @@ body {
 
 .course-detail-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 
 .course-detail-row dt {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.3rem;
+  padding-top: 0.08rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
