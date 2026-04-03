@@ -350,6 +350,12 @@ export function CourseBrowser({
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [coursesById, selectedCoursesByDate]);
 
+  const formatDate = useCallback((isoDate: string) => {
+    const [year, month, day] = isoDate.split("-");
+    if (!year || !month || !day) return isoDate;
+    return `${day}.${month}.${year}`;
+  }, []);
+
   const performAssignToSelectedDate = useCallback(
     (courseId: number, slotDate: string) => {
       const previousCourseId = selectedCoursesByDate[slotDate];
@@ -550,12 +556,6 @@ export function CourseBrowser({
     const last = lastEnd.toISOString().slice(0, 10);
     return { first, last };
   }, [plannedEntries]);
-
-  const formatDate = useCallback((isoDate: string) => {
-    const [year, month, day] = isoDate.split("-");
-    if (!year || !month || !day) return isoDate;
-    return `${day}.${month}.${year}`;
-  }, []);
 
   /** Freie Kalendertage zwischen Kursende (exkl.) und nächstem Kursstart (exkl.), mind. 14 Tage. */
   const planGapRanges = useMemo(() => {
