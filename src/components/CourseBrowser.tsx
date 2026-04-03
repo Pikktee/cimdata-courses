@@ -121,6 +121,13 @@ function firstAvailableStartInGap(
   return hit ?? null;
 }
 
+function getGapJumpTargetIso(
+  gap: { from: string; to: string; nextStartDate: string },
+  availableStartDates: string[]
+): string {
+  return firstAvailableStartInGap(gap.from, gap.to, availableStartDates) ?? gap.nextStartDate;
+}
+
 function getOverlappingPlannedEntry(
   plan: Record<string, number>,
   coursesById: Map<number, CourseItem>,
@@ -595,9 +602,7 @@ export function CourseBrowser({
 
   const handleJumpGapToStartDate = useCallback(
     (gap: { from: string; to: string; nextStartDate: string }) => {
-      const inGap = firstAvailableStartInGap(gap.from, gap.to, initial.availableStartDates);
-      const target = inGap ?? gap.nextStartDate;
-      handleDateChange(target);
+      handleDateChange(getGapJumpTargetIso(gap, initial.availableStartDates));
     },
     [handleDateChange, initial.availableStartDates]
   );
@@ -783,17 +788,20 @@ export function CourseBrowser({
                         </button>
                       </li>
                       {gapAfter ? (
-                        <li className="plan-gap-item">
+                        <li className="plan-gap-row">
                           <button
                             type="button"
                             className="plan-gap-link"
                             onClick={() => handleJumpGapToStartDate(gapAfter)}
-                            aria-label={`Zum Startdatum in der Lücke ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)} wechseln`}
+                            aria-label={`Kursliste für Start am ${formatDate(getGapJumpTargetIso(gapAfter, initial.availableStartDates))} anzeigen. Freie Zeit von ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)}.`}
                           >
-                            <span className="plan-gap-text">
-                              Lücke: {formatDate(gapAfter.from)} – {formatDate(gapAfter.to)}
-                              <span className="plan-gap-link-hint"> · Termin wählen</span>
+                            <span className="plan-gap-meta">
+                              <span className="plan-gap-kicker">Freie Zeit</span>
+                              <span className="plan-gap-range">
+                                {formatDate(gapAfter.from)} – {formatDate(gapAfter.to)}
+                              </span>
                             </span>
+                            <span className="plan-gap-cta">Kursliste anzeigen</span>
                           </button>
                         </li>
                       ) : null}
