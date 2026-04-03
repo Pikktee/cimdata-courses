@@ -1,19 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CIMDATA Kurse">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CIMDATA Studienplaner">
   <defs>
-    <linearGradient id="cim-fg" x1="6" y1="4" x2="28" y2="30" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ff8f5c"/>
-      <stop offset="1" stop-color="#c73d0a"/>
+    <linearGradient id="sp-bg" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#312e81"/>
+      <stop offset="0.45" stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#6366f1"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="8" fill="url(#cim-fg)"/>
+  <rect width="32" height="32" rx="8" fill="url(#sp-bg)"/>
+  <!-- Kalender: Kopf / Hakenträger -->
   <path
     fill="none"
-    stroke="#fffaf3"
-    stroke-width="2"
+    stroke="#e0e7ff"
+    stroke-width="1.85"
     stroke-linecap="round"
-    d="M11 9v3M21 9v3"
+    stroke-linejoin="round"
+    d="M9 8.5v3M23 8.5v3"
   />
-  <rect x="7" y="12" width="18" height="15" rx="2" fill="#fffaf3"/>
-  <path stroke="#d95016" stroke-width="1.75" stroke-linecap="round" d="M10 17.5h12"/>
-  <rect x="12.5" y="19.5" width="7" height="5" rx="1.25" fill="#ff7a40"/>
+  <rect
+    x="6.75"
+    y="10.5"
+    width="18.5"
+    height="16.25"
+    rx="2.35"
+    fill="none"
+    stroke="#f8fafc"
+    stroke-width="1.85"
+  />
+  <path stroke="#c7d2fe" stroke-width="1.75" stroke-linecap="round" d="M6.75 15h18.5"/>
+  <!-- kleine „Termin“-Punkte -->
+  <circle cx="11" cy="19" r="1.35" fill="#a5b4fc"/>
+  <circle cx="16" cy="19" r="1.35" fill="#a5b4fc"/>
+  <circle cx="21" cy="19" r="1.35" fill="#a5b4fc"/>
+  <circle cx="11" cy="23.5" r="1.1" fill="#6366f1" opacity="0.9"/>
+  <circle cx="16" cy="23.5" r="1.1" fill="#6366f1" opacity="0.9"/>
 </svg>
