@@ -1298,6 +1298,41 @@ body {
   line-height: 1.3;
 }
 
+.plan-gap-link {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+  color: inherit;
+  border-radius: var(--radius-xs);
+  transition: opacity var(--duration) var(--ease);
+}
+
+.plan-gap-link:focus-visible {
+  outline: none;
+  box-shadow: var(--plan-accent-ring);
+}
+
+.plan-gap-link:hover .plan-gap-text {
+  color: #7c2d12;
+}
+
+.plan-gap-link:hover .plan-gap-link-hint {
+  color: var(--plan-accent);
+  text-decoration: underline;
+  text-decoration-color: var(--plan-accent-border-soft);
+}
+
+.plan-gap-link-hint {
+  font-weight: 600;
+  color: var(--plan-accent);
+  text-underline-offset: 0.12rem;
+}
+
 .plan-course-item {
   position: relative;
   display: grid;

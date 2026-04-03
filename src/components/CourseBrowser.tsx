@@ -90,23 +90,35 @@ function normalizeCourseTitle(title: string): string {
   return title.trim().toLowerCase();
 }
 
-/** Gleicher Kurs (ID oder Titel) darf nur einmal im Plan vorkommen — Vergleich ohne aktuellen Termin-Slot. */
-function isCourseAlreadyPlannedElsewhere(
+/** Andere Plan-Slots mit gleicher Kurs-ID oder gleichem Titel (ohne aktuellen Termin-Slot). */
+function findDuplicatePlanSlotsElsewhere(
   plan: Record<string, number>,
   coursesById: Map<number, CourseItem>,
   courseId: number,
   activeStartDate: string
-): boolean {
+): string[] {
   const course = coursesById.get(courseId);
-  if (!course) return false;
+  if (!course) return [];
   const titleNorm = normalizeCourseTitle(course.title);
-  return Object.entries(plan).some(([startDate, id]) => {
-    if (startDate === activeStartDate) return false;
-    if (id === courseId) return true;
-    const other = coursesById.get(id);
-    if (!other) return false;
-    return normalizeCourseTitle(other.title) === titleNorm;
-  });
+  return Object.entries(plan)
+    .filter(([startDate, id]) => {
+      if (startDate === activeStartDate) return false;
+      if (id === courseId) return true;
+      const other = coursesById.get(id);
+      if (!other) return false;
+      return normalizeCourseTitle(other.title) === titleNorm;
+    })
+    .map(([startDate]) => startDate);
+}
+
+/** Erster bekannter Kurs-Starttermin im Lückenbereich [from, to], sonst null. */
+function firstAvailableStartInGap(
+  fromIso: string,
+  toIso: string,
+  availableStartDates: string[]
+): string | null {
+  const hit = availableStartDates.find((d) => d >= fromIso && d <= toIso);
+  return hit ?? null;
 }
 
 function getOverlappingPlannedEntry(
@@ -206,6 +218,12 @@ export function CourseBrowser({
   const [planConfirmDialog, setPlanConfirmDialog] = useState<
     | null
     | { kind: "clear"; courseCount: number }
+    | {
+        kind: "moveDuplicate";
+        courseId: number;
+        newStartDate: string;
+        removeStartDates: string[];
+      }
   >(null);
   const [isRefreshingNow, startRefreshTransition] = useTransition();
   const [scrollToCourseRequest, setScrollToCourseRequest] = useState<{
@@ -332,18 +350,34 @@ export function CourseBrowser({
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [coursesById, selectedCoursesByDate]);
 
+  const performAssignToSelectedDate = useCallback(
+    (courseId: number, slotDate: string) => {
+      const previousCourseId = selectedCoursesByDate[slotDate];
+      const effectType =
+        typeof previousCourseId === "number" && previousCourseId !== courseId ? "replace" : "add";
+      setSelectedCoursesByDate((current) => ({
+        ...current,
+        [slotDate]: courseId
+      }));
+      setPlanEntryEffects((current) => ({
+        ...current,
+        [slotDate]: effectType
+      }));
+      window.setTimeout(() => {
+        setPlanEntryEffects((current) => {
+          if (!current[slotDate] || current[slotDate] !== effectType) return current;
+          const next = { ...current };
+          delete next[slotDate];
+          return next;
+        });
+      }, 650);
+    },
+    [selectedCoursesByDate]
+  );
+
   const handleAssignCourse = useCallback(
     (courseId: number) => {
       if (selectedDate === "all") return;
-      if (isCourseAlreadyPlannedElsewhere(selectedCoursesByDate, coursesById, courseId, selectedDate)) {
-        const c = coursesById.get(courseId);
-        setPlanActionNotice(
-          c
-            ? `„${c.title}“ ist bereits für einen anderen Termin im Studienplan.`
-            : "Dieser Kurs ist bereits für einen anderen Termin im Studienplan."
-        );
-        return;
-      }
       const overlappingEntry = getOverlappingPlannedEntry(
         selectedCoursesByDate,
         coursesById,
@@ -359,34 +393,45 @@ export function CourseBrowser({
         );
         return;
       }
-      setPlanActionNotice(null);
-      const previousCourseId = selectedCoursesByDate[selectedDate];
-      const effectType =
-        typeof previousCourseId === "number" && previousCourseId !== courseId ? "replace" : "add";
-      setSelectedCoursesByDate((current) => ({
-        ...current,
-        [selectedDate]: courseId
-      }));
-      setPlanEntryEffects((current) => ({
-        ...current,
-        [selectedDate]: effectType
-      }));
-      window.setTimeout(() => {
-        setPlanEntryEffects((current) => {
-          if (!current[selectedDate] || current[selectedDate] !== effectType) return current;
-          const next = { ...current };
-          delete next[selectedDate];
-          return next;
+      const duplicateSlots = findDuplicatePlanSlotsElsewhere(
+        selectedCoursesByDate,
+        coursesById,
+        courseId,
+        selectedDate
+      );
+      if (duplicateSlots.length > 0) {
+        setPlanActionNotice(null);
+        setPlanConfirmDialog({
+          kind: "moveDuplicate",
+          courseId,
+          newStartDate: selectedDate,
+          removeStartDates: duplicateSlots
         });
-      }, 650);
+        return;
+      }
+      setPlanActionNotice(null);
+      performAssignToSelectedDate(courseId, selectedDate);
     },
-    [selectedDate, selectedCoursesByDate, coursesById, formatDate]
+    [
+      selectedDate,
+      selectedCoursesByDate,
+      coursesById,
+      formatDate,
+      performAssignToSelectedDate
+    ]
   );
 
-  const isCourseBlockedDuplicate = useCallback(
+  const isPlannedElsewhere = useCallback(
     (courseId: number) => {
       if (selectedDate === "all") return false;
-      return isCourseAlreadyPlannedElsewhere(selectedCoursesByDate, coursesById, courseId, selectedDate);
+      return (
+        findDuplicatePlanSlotsElsewhere(
+          selectedCoursesByDate,
+          coursesById,
+          courseId,
+          selectedDate
+        ).length > 0
+      );
     },
     [selectedDate, selectedCoursesByDate, coursesById]
   );
@@ -442,8 +487,37 @@ export function CourseBrowser({
 
   const confirmPlanDialog = useCallback(() => {
     if (!planConfirmDialog) return;
-    performClearStudyPlan();
-  }, [planConfirmDialog, performClearStudyPlan]);
+    if (planConfirmDialog.kind === "clear") {
+      performClearStudyPlan();
+      return;
+    }
+    const { courseId, newStartDate, removeStartDates } = planConfirmDialog;
+    setPlanConfirmDialog(null);
+    setPlanActionNotice(null);
+    const previousCourseId = selectedCoursesByDate[newStartDate];
+    const effectType =
+      typeof previousCourseId === "number" && previousCourseId !== courseId ? "replace" : "add";
+    setSelectedCoursesByDate((current) => {
+      const next = { ...current };
+      for (const sd of removeStartDates) {
+        delete next[sd];
+      }
+      next[newStartDate] = courseId;
+      return next;
+    });
+    setPlanEntryEffects((current) => ({
+      ...current,
+      [newStartDate]: effectType
+    }));
+    window.setTimeout(() => {
+      setPlanEntryEffects((current) => {
+        if (!current[newStartDate] || current[newStartDate] !== effectType) return current;
+        const next = { ...current };
+        delete next[newStartDate];
+        return next;
+      });
+    }, 650);
+  }, [planConfirmDialog, performClearStudyPlan, selectedCoursesByDate]);
 
   useEffect(() => {
     if (!planConfirmDialog) return;
@@ -485,7 +559,12 @@ export function CourseBrowser({
 
   /** Freie Kalendertage zwischen Kursende (exkl.) und nächstem Kursstart (exkl.), mind. 14 Tage. */
   const planGapRanges = useMemo(() => {
-    const ranges: { afterStartDate: string; from: string; to: string }[] = [];
+    const ranges: {
+      afterStartDate: string;
+      from: string;
+      to: string;
+      nextStartDate: string;
+    }[] = [];
     for (let i = 1; i < plannedEntries.length; i += 1) {
       const previousEntry = plannedEntries[i - 1];
       const currentEntry = plannedEntries[i];
@@ -500,7 +579,12 @@ export function CourseBrowser({
       const from = previousEndExclusive.toISOString().slice(0, 10);
       const lastFree = new Date(currentStart.getTime() - MS_PER_DAY);
       const to = lastFree.toISOString().slice(0, 10);
-      ranges.push({ afterStartDate: previousEntry.startDate, from, to });
+      ranges.push({
+        afterStartDate: previousEntry.startDate,
+        from,
+        to,
+        nextStartDate: currentEntry.startDate
+      });
     }
     return ranges;
   }, [plannedEntries]);
@@ -508,6 +592,15 @@ export function CourseBrowser({
   const planGapByAfterStartDate = useMemo(() => {
     return new Map(planGapRanges.map((gap) => [gap.afterStartDate, gap]));
   }, [planGapRanges]);
+
+  const handleJumpGapToStartDate = useCallback(
+    (gap: { from: string; to: string; nextStartDate: string }) => {
+      const inGap = firstAvailableStartInGap(gap.from, gap.to, initial.availableStartDates);
+      const target = inGap ?? gap.nextStartDate;
+      handleDateChange(target);
+    },
+    [handleDateChange, initial.availableStartDates]
+  );
 
   const handleManualRefresh = useCallback(() => {
     setManualRefreshNotice(null);
@@ -690,13 +783,18 @@ export function CourseBrowser({
                         </button>
                       </li>
                       {gapAfter ? (
-                        <li
-                          className="plan-gap-item"
-                          aria-label={`Lücke von ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)}`}
-                        >
-                          <span className="plan-gap-text">
-                            Lücke: {formatDate(gapAfter.from)} - {formatDate(gapAfter.to)}
-                          </span>
+                        <li className="plan-gap-item">
+                          <button
+                            type="button"
+                            className="plan-gap-link"
+                            onClick={() => handleJumpGapToStartDate(gapAfter)}
+                            aria-label={`Zum Startdatum in der Lücke ${formatDate(gapAfter.from)} bis ${formatDate(gapAfter.to)} wechseln`}
+                          >
+                            <span className="plan-gap-text">
+                              Lücke: {formatDate(gapAfter.from)} – {formatDate(gapAfter.to)}
+                              <span className="plan-gap-link-hint"> · Termin wählen</span>
+                            </span>
+                          </button>
                         </li>
                       ) : null}
                     </Fragment>
@@ -716,7 +814,7 @@ export function CourseBrowser({
           selectedByDate={selectedCoursesByDate}
           onAssignCourse={handleAssignCourse}
           onRemoveCourse={handleRemoveCourse}
-          isCourseBlocked={isCourseBlockedDuplicate}
+          isPlannedElsewhere={isPlannedElsewhere}
           isMinimized={(courseId) => minimizedCourseIdSet.has(courseId)}
           onToggleMinimized={toggleCourseMinimized}
           scrollToCourseRequest={scrollToCourseRequest}
@@ -812,17 +910,31 @@ export function CourseBrowser({
             onMouseDown={(e) => e.stopPropagation()}
           >
             <h2 id={planConfirmTitleId} className="plan-confirm-title">
-              Studienplan zurücksetzen?
+              {planConfirmDialog.kind === "clear"
+                ? "Studienplan zurücksetzen?"
+                : "Kurs zu diesem Termin verschieben?"}
             </h2>
             <p className="plan-confirm-body">
-              <>
-                Alle{" "}
-                <strong>
-                  {planConfirmDialog.courseCount}{" "}
-                  {planConfirmDialog.courseCount === 1 ? "Kurs" : "Kurse"}
-                </strong>{" "}
-                werden aus dem Plan entfernt. Das kann nicht rückgängig gemacht werden.
-              </>
+              {planConfirmDialog.kind === "clear" ? (
+                <>
+                  Alle{" "}
+                  <strong>
+                    {planConfirmDialog.courseCount}{" "}
+                    {planConfirmDialog.courseCount === 1 ? "Kurs" : "Kurse"}
+                  </strong>{" "}
+                  werden aus dem Plan entfernt. Das kann nicht rückgängig gemacht werden.
+                </>
+              ) : (
+                <>
+                  <strong>{coursesById.get(planConfirmDialog.courseId)?.title ?? "Dieser Kurs"}</strong>{" "}
+                  ist bereits für{" "}
+                  {planConfirmDialog.removeStartDates.map((d) => formatDate(d)).join(", ")} im
+                  Studienplan eingetragen. Beim Fortfahren wird{" "}
+                  {planConfirmDialog.removeStartDates.length === 1 ? "dieser Eintrag" : "diese Einträge"}{" "}
+                  entfernt und der Kurs für{" "}
+                  <strong>{formatDate(planConfirmDialog.newStartDate)}</strong> übernommen.
+                </>
+              )}
             </p>
             <div className="plan-confirm-actions">
               <button
@@ -838,7 +950,7 @@ export function CourseBrowser({
                 className="plan-confirm-btn plan-confirm-btn--danger"
                 onClick={confirmPlanDialog}
               >
-                Zurücksetzen
+                {planConfirmDialog.kind === "clear" ? "Zurücksetzen" : "Übernehmen"}
               </button>
             </div>
           </div>

@@ -27,8 +27,8 @@ type CourseListProps = {
   onRemoveCourse: (startDate: string) => void;
   onToggleMinimized: (courseId: number) => void;
   isMinimized: (courseId: number) => boolean;
-  /** Kurs ist bereits unter anderem Termin im Plan (gleicher Titel / gleiche ID). */
-  isCourseBlocked?: (courseId: number) => boolean;
+  /** Kurs steht bereits unter einem anderen Startdatum im Plan (wird nach Bestätigung verschoben). */
+  isPlannedElsewhere?: (courseId: number) => boolean;
   scrollToCourseRequest?: ScrollToCourseRequest | null;
   onScrollToCourseHandled?: () => void;
 };
@@ -96,7 +96,7 @@ export function CourseList({
   onRemoveCourse,
   onToggleMinimized,
   isMinimized,
-  isCourseBlocked,
+  isPlannedElsewhere,
   scrollToCourseRequest,
   onScrollToCourseHandled
 }: CourseListProps) {
@@ -181,15 +181,14 @@ export function CourseList({
             const assignedCourseId = isDateSelected ? selectedByDate[activeDate] : undefined;
             const isAssigned = assignedCourseId === course.id;
             const isReplacing = typeof assignedCourseId === "number" && assignedCourseId !== course.id;
-            const isDuplicateElsewhere = Boolean(isCourseBlocked?.(course.id));
-            const actionBlocked = isDuplicateElsewhere && !isAssigned;
+            const isDuplicateElsewhere = Boolean(isPlannedElsewhere?.(course.id));
             const formattedActiveDate = isDateSelected ? formatDate(activeDate) : null;
             const actionLabel = !isDateSelected
               ? "Startdatum wählen"
               : isAssigned
                 ? "Bereits im Studienplan"
-                : actionBlocked
-                  ? "Bereits anderer Termin im Studienplan"
+                : isDuplicateElsewhere
+                  ? "Zu diesem Termin verschieben"
                   : isReplacing
                     ? "Für Termin ersetzen"
                     : "In Studienplan aufnehmen";
@@ -197,13 +196,14 @@ export function CourseList({
               ? "Bitte zuerst in der linken Spalte ein konkretes Startdatum wählen."
               : isAssigned
                 ? `Kurs am ${formattedActiveDate} aus dem Studienplan entfernen.`
-                : actionBlocked
-                  ? "Dieser Kurs ist bereits für einen anderen Termin im Studienplan. Entferne den bestehenden Eintrag oder wähle einen anderen Kurs."
+                : isDuplicateElsewhere
+                  ? "Der bestehende Plan-Eintrag an anderem Startdatum wird nach Bestätigung entfernt und hier übernommen."
                   : isReplacing
                     ? `Kurs für ${formattedActiveDate} im Studienplan ersetzen.`
                     : `Kurs für ${formattedActiveDate} in den Studienplan aufnehmen.`;
             const showRemove = isAssigned;
-            const showReplace = isReplacing && !actionBlocked;
+            const showReplace = isReplacing && !isDuplicateElsewhere;
+            const showArrowsIcon = showReplace || (!isAssigned && isDuplicateElsewhere);
 
             return (
               <article
@@ -282,11 +282,11 @@ export function CourseList({
                       className={`course-plan-icon-btn ${
                         showRemove
                           ? "course-plan-icon-btn-remove"
-                          : showReplace
+                          : showArrowsIcon
                             ? "course-plan-icon-btn-replace"
                             : "course-plan-icon-btn-add"
                       }`}
-                      disabled={!isDateSelected || actionBlocked}
+                      disabled={!isDateSelected}
                       onClick={() =>
                         showRemove ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
                       }
@@ -303,7 +303,7 @@ export function CourseList({
                             strokeLinejoin="round"
                           />
                         </svg>
-                      ) : showReplace ? (
+                      ) : showArrowsIcon ? (
                         <svg viewBox="0 0 24 24" aria-hidden>
                           <path
                             d="M4 8h12M12 4l4 4-4 4M20 16H8M12 12l-4 4 4 4"
