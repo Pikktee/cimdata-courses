@@ -24,9 +24,12 @@ model Course {
   locationText String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  lastSeenAt   DateTime      @default(now())
+  archivedAt   DateTime?
   starts       CourseStart[]
 
   @@index([title])
+  @@index([archivedAt])
 }
 
 model CourseStart {

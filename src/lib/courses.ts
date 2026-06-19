@@ -5,6 +5,10 @@ function dateFromIso(isoDate: string): Date {
   return new Date(`${isoDate}T00:00:00.000Z`);
 }
 
+function todayUtcMidnight(): Date {
+  return dateFromIso(new Date().toISOString().slice(0, 10));
+}
+
 function formatRefreshError(error: unknown): string {
   if (error instanceof Error) {
     const details = [
@@ -86,6 +90,8 @@ export async function refreshCoursesFromSource() {
 
     const { courses, source } = await scrapeCimdataCourses();
     const scrapedSlugs = new Set<string>();
+    const now = new Date();
+    const today = todayUtcMidnight();
     let foundStarts = 0;
 
     for (const course of courses) {
@@ -101,7 +107,9 @@ export async function refreshCoursesFromSource() {
           area: course.area,
           durationText: course.durationText,
           scheduleText: course.scheduleText,
-          locationText: course.locationText
+          locationText: course.locationText,
+          lastSeenAt: now,
+          archivedAt: null
         },
         update: {
           title: course.title,
@@ -110,32 +118,53 @@ export async function refreshCoursesFromSource() {
           area: course.area,
           durationText: course.durationText,
           scheduleText: course.scheduleText,
-          locationText: course.locationText
+          locationText: course.locationText,
+          lastSeenAt: now,
+          // Falls der Kurs zuvor archiviert war und wieder auftaucht: reaktivieren.
+          archivedAt: null
         }
       });
 
+      const scrapedDates = course.startDates.map((item) => dateFromIso(item.isoDate));
+
+      // Vergangene Termine bleiben als Historie erhalten. Nur zukünftige Termine
+      // (ab heute), die nicht mehr im aktuellen Scrape stehen, werden entfernt –
+      // so spiegeln Absagen/Verschiebungen sich wider, ohne die Vergangenheit zu verlieren.
       await db.courseStart.deleteMany({
-        where: { courseId: upserted.id }
+        where: {
+          courseId: upserted.id,
+          startDate:
+            scrapedDates.length > 0
+              ? { gte: today, notIn: scrapedDates }
+              : { gte: today }
+        }
       });
 
-      if (course.startDates.length > 0) {
+      if (scrapedDates.length > 0) {
+        // skipDuplicates verhindert Kollisionen mit bereits gespeicherten Terminen
+        // (eindeutiger Index courseId + startDate).
         await db.courseStart.createMany({
           data: course.startDates.map((item) => ({
             courseId: upserted.id,
             startDate: dateFromIso(item.isoDate),
             rawText: item.rawText
-          }))
+          })),
+          skipDuplicates: true
         });
       }
 
       foundStarts += course.startDates.length;
     }
 
-    await db.course.deleteMany({
+    // Kurse, die nicht mehr gelistet sind, werden NICHT gelöscht, sondern
+    // archiviert (Historie bleibt erhalten). Bereits Archivierte bleiben unberührt.
+    await db.course.updateMany({
       where: {
         category: "Kurs",
-        slug: { notIn: Array.from(scrapedSlugs) }
-      }
+        slug: { notIn: Array.from(scrapedSlugs) },
+        archivedAt: null
+      },
+      data: { archivedAt: now }
     });
 
     await db.refreshRun.update({
@@ -179,15 +208,18 @@ export async function refreshCoursesFromSource() {
 }
 
 export async function getCoursesByStartDate(startDate?: string | null) {
+  // Nur aktive (nicht archivierte) Kurse anzeigen. Termine werden komplett
+  // gezeigt – inkl. vergangener (Historie), damit der Verlauf sichtbar bleibt.
   const where = startDate
     ? {
+        archivedAt: null,
         starts: {
           some: {
             startDate: dateFromIso(startDate)
           }
         }
       }
-    : {};
+    : { archivedAt: null };
 
   const courses: Array<{
     id: number;

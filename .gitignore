@@ -11,3 +11,11 @@ test-results
 prisma/dev.db
 prisma/dev.db-journal
 .vercel
+
+# Lokale DB-Backups (enthalten Kursdaten, gehören nicht ins Repo)
+backups/
+
+# Lokaler SQLite-Snapshot (binär) und Build-/Editor-Artefakte
+/dev.db
+tsconfig.tsbuildinfo
+.cursor/
