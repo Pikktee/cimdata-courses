@@ -251,9 +251,6 @@ body {
   opacity: 0;
   visibility: hidden;
   z-index: 2;
-  transition:
-    opacity 240ms var(--ease),
-    visibility 240ms var(--ease);
 }
 
 /* Längere Fallback-Meldung darf bei wenig Platz umbrechen */
@@ -263,9 +260,27 @@ body {
   max-width: min(220px, 72vw);
 }
 
-.hero-share-note--visible {
-  opacity: 1;
-  visibility: visible;
+/* Sanftes Ein-/Ausblenden: läuft beim Mount automatisch ab (frischer
+   key={feedback.id} pro Hinweis) – kein JS-getriebener State-Toggle nötig. */
+.hero-share-note--flash {
+  animation: hero-share-note-flash 2160ms var(--ease);
+}
+
+@keyframes hero-share-note-flash {
+  0% {
+    opacity: 0;
+    visibility: visible;
+  }
+  11% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: visible;
+  }
 }
 
 .hero-share-wrap.has-tooltip {

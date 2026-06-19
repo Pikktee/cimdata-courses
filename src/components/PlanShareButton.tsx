@@ -4,31 +4,22 @@ import { useEffect, useState } from "react";
 
 type Feedback = { id: number; text: string };
 
+// Gesamtdauer der CSS-Animation `hero-share-note-flash` (Fade-In + Standzeit
+// + Fade-Out) aus globals.css. Danach wird der Hinweis aus dem DOM entfernt.
+const FEEDBACK_DURATION_MS = 2160;
+
 export function PlanShareButton() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [feedbackVisible, setFeedbackVisible] = useState(false);
 
   useEffect(() => {
     if (!feedback) return;
 
-    setFeedbackVisible(false);
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => setFeedbackVisible(true));
-    });
+    const removeTimer = window.setTimeout(
+      () => setFeedback(null),
+      FEEDBACK_DURATION_MS
+    );
 
-    const hideTimer = window.setTimeout(() => setFeedbackVisible(false), 1900);
-    const removeTimer = window.setTimeout(() => {
-      setFeedback(null);
-      setFeedbackVisible(false);
-    }, 1900 + 260);
-
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      clearTimeout(hideTimer);
-      clearTimeout(removeTimer);
-    };
+    return () => window.clearTimeout(removeTimer);
   }, [feedback]);
 
   const handleShare = async () => {
@@ -57,8 +48,8 @@ export function PlanShareButton() {
           role="status"
           className={[
             "hero-share-note",
-            feedback.text !== "Link kopiert" ? "hero-share-note--wrap" : "",
-            feedbackVisible ? "hero-share-note--visible" : ""
+            "hero-share-note--flash",
+            feedback.text !== "Link kopiert" ? "hero-share-note--wrap" : ""
           ]
             .filter(Boolean)
             .join(" ")}
