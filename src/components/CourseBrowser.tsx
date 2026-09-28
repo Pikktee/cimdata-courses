@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Fragment,
   useCallback,
@@ -9,10 +8,8 @@ import {
   useId,
   useMemo,
   useRef,
-  useState,
-  useTransition
+  useState
 } from "react";
-import { triggerCourseRefresh } from "@/app/actions/refreshCourses";
 import { CourseList } from "@/components/CourseList";
 import { DateFilter } from "@/components/DateFilter";
 
@@ -212,12 +209,10 @@ export function CourseBrowser({
 }: {
   initial: CoursesResponse;
 }) {
-  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState("all");
   const [selectedCoursesByDate, setSelectedCoursesByDate] = useState<Record<string, number>>({});
   const [minimizedCourseIds, setMinimizedCourseIds] = useState<number[]>([]);
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
-  const [manualRefreshNotice, setManualRefreshNotice] = useState<string | null>(null);
   const [planActionNotice, setPlanActionNotice] = useState<string | null>(null);
   const [planEntryEffects, setPlanEntryEffects] = useState<
     Record<string, "add" | "replace">
@@ -232,7 +227,6 @@ export function CourseBrowser({
         removeStartDates: string[];
       }
   >(null);
-  const [isRefreshingNow, startRefreshTransition] = useTransition();
   const [scrollToCourseRequest, setScrollToCourseRequest] = useState<{
     courseId: number;
     requestId: number;
@@ -488,7 +482,7 @@ export function CourseBrowser({
   const performClearStudyPlan = useCallback(() => {
     setSelectedCoursesByDate({});
     setPlanEntryEffects({});
-    setManualRefreshNotice("Studienplan wurde zurückgesetzt.");
+    setPlanActionNotice("Studienplan wurde zurückgesetzt.");
     setPlanConfirmDialog(null);
   }, []);
 
@@ -607,40 +601,8 @@ export function CourseBrowser({
     [handleDateChange, initial.availableStartDates]
   );
 
-  const handleManualRefresh = useCallback(() => {
-    setManualRefreshNotice(null);
-    startRefreshTransition(async () => {
-      try {
-        const result = await triggerCourseRefresh();
-        if (result.ok) {
-          setManualRefreshNotice(
-            `Refresh erfolgreich: ${result.foundCourses ?? 0} Kurse, ${result.foundStarts ?? 0} Starttermine.`
-          );
-        } else if (result.reason === "already-running") {
-          setManualRefreshNotice(
-            "Ein Refresh läuft bereits."
-          );
-        } else {
-          setManualRefreshNotice(
-            "Refresh fehlgeschlagen. Details im Statusbereich."
-          );
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        setManualRefreshNotice(`Fehler: ${message}`);
-      } finally {
-        router.refresh();
-      }
-    });
-  }, [router]);
-
+  // Aktualisiert wird nur per Cron (Bearer-Token) oder CLI – bewusst ohne Knopf für Besucher.
   const latestRefresh = initial.latestRefresh;
-  const refreshFailed = latestRefresh?.status === "failed";
-  const syncErrorTooltip = refreshFailed
-    ? (latestRefresh?.message?.trim()
-        ? latestRefresh.message.replace(/\r?\n+/g, " ").trim().slice(0, 1200)
-        : "Synchronisation fehlgeschlagen.")
-    : "";
   const refreshTimestampLabel =
     latestRefresh?.status === "running"
       ? "Läuft seit"
@@ -855,51 +817,8 @@ export function CourseBrowser({
                 <span className="footer-sync-time">{refreshTimestampValue}</span>
               )}
             </span>
-            <span
-              className={
-                refreshFailed
-                  ? "footer-sync-btn-wrap has-tooltip-footer-sync-error"
-                  : "footer-sync-btn-wrap"
-              }
-              data-tooltip={refreshFailed ? syncErrorTooltip : undefined}
-            >
-              <button
-                type="button"
-                className={`manual-refresh-icon-btn manual-refresh-icon-btn--footer${
-                  refreshFailed ? " manual-refresh-icon-btn--error" : ""
-                }`}
-                onClick={handleManualRefresh}
-                disabled={isRefreshingNow}
-                aria-label={
-                  refreshFailed && syncErrorTooltip
-                    ? `Daten aktualisieren. Letzter Fehler: ${syncErrorTooltip.slice(0, 280)}`
-                    : "Daten jetzt aktualisieren"
-                }
-                title={
-                  refreshFailed && syncErrorTooltip
-                    ? syncErrorTooltip
-                    : "Daten aktualisieren"
-                }
-              >
-                <svg viewBox="0 0 24 24" aria-hidden>
-                  <path
-                    d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </span>
           </div>
         </div>
-        {manualRefreshNotice ? (
-          <p className="footer-manual-notice" role="status">
-            {manualRefreshNotice}
-          </p>
-        ) : null}
       </footer>
 
       {planConfirmDialog ? (

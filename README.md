@@ -90,7 +90,9 @@ Query-Parameter:
 
 - `startDate` (optional), z. B. `2026-04-15`
 
-Hinweis: Es gibt absichtlich **kein** `POST /api/refresh` mehr.
+Hinweis: Es gibt absichtlich **kein** `POST /api/refresh` mehr und auch keine Server Action oder
+Schaltfläche für Besucher – sonst könnte jeder einen kompletten Abruf der CIMDATA-API auslösen.
+Aktualisiert wird nur per CLI (`npm run refresh`) oder über den Cron-Endpunkt mit `CRON_SECRET`.
 
 ### `GET /api/internal/refresh-courses`
 
