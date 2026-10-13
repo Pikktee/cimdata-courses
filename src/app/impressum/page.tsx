@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Impressum & Datenschutz | CIMDATA Studienplaner",
   description:
-    "Impressum und Datenschutzhinweise gemäß TMG und DSGVO für den CIMDATA Studienplaner."
+    "Impressum und Datenschutzhinweise gemäß DDG und DSGVO für den CIMDATA Studienplaner."
 };
 
 export default function ImpressumPage() {
@@ -14,8 +14,8 @@ export default function ImpressumPage() {
         <p className="eyebrow">Rechtliches</p>
         <h1>Impressum &amp; Datenschutz</h1>
         <p className="hero-copy">
-          Pflichtangaben nach dem Telemediengesetz (TMG) sowie
-          transparenter Datenschutz nach der Datenschutz-Grundverordnung
+          Pflichtangaben nach dem Digitale-Dienste-Gesetz (DDG) sowie
+          Hinweise zum Datenschutz nach der Datenschutz-Grundverordnung
           (DSGVO).
         </p>
       </header>
@@ -23,7 +23,7 @@ export default function ImpressumPage() {
       <article className="legal-article">
         <section className="legal-section" aria-labelledby="impressum-heading">
           <h2 id="impressum-heading">Impressum</h2>
-          <p>Angaben gemäß § 5 TMG:</p>
+          <p>Angaben gemäß § 5 DDG:</p>
           <address className="legal-address">
             Henrik Heil
             <br />
@@ -47,12 +47,17 @@ export default function ImpressumPage() {
         <section className="legal-section" aria-labelledby="haftung-inhalt-heading">
           <h2 id="haftung-inhalt-heading">Haftung für Inhalte</h2>
           <p>
-            Als Diensteanbieter bin ich gemäß § 7 Abs. 1 TMG für eigene
-            Inhalte auf diesen Seiten nach den allgemeinen Gesetzen
-            verantwortlich. Nach §§ 8 bis 10 TMG bin ich als Diensteanbieter
-            jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde
-            Informationen zu überwachen oder nach Umständen zu forschen, die auf
-            eine rechtswidrige Tätigkeit hinweisen.
+            Dieser Studienplaner ist ein unabhängiges, privates Projekt und kein
+            offizielles Angebot von CIMDATA. Kurse und Termine werden täglich
+            aus öffentlich zugänglichen Angaben auf cimdata.de übernommen. Alle
+            Angaben ohne Gewähr; verbindlich sind die Angaben auf cimdata.de.
+          </p>
+          <p>
+            Als Diensteanbieter bin ich für eigene Inhalte auf diesen Seiten
+            nach den allgemeinen Gesetzen verantwortlich. Ich bin jedoch nicht
+            verpflichtet, übermittelte oder gespeicherte fremde Informationen zu
+            überwachen oder nach Umständen zu forschen, die auf eine
+            rechtswidrige Tätigkeit hinweisen.
           </p>
           <p>
             Verpflichtungen zur Entfernung oder Sperrung der Nutzung von
@@ -112,12 +117,29 @@ export default function ImpressumPage() {
           </h3>
           <p>
             Personenbezogene Daten werden nur verarbeitet, soweit dies zur
-            Bereitstellung einer funktionsfähigen Website sowie der Inhalte und
-            Leistungen erforderlich ist. Die Verarbeitung erfolgt regelmäßig nur
-            auf Grundlage einer gesetzlichen Erlaubnis, insbesondere Ihrer
-            Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO oder zur Wahrung
-            eines berechtigten Interesses gemäß Art. 6 Abs. 1 lit. f DSGVO (z.&nbsp;B.
-            Betrieb und Absicherung des Onlineangebots).
+            Bereitstellung einer funktionsfähigen Website erforderlich ist.
+            Rechtsgrundlage ist das berechtigte Interesse an einem sicheren und
+            funktionsfähigen Onlineangebot (Art. 6 Abs. 1 lit. f DSGVO). Diese
+            Website setzt keine Cookies und bindet keine Analyse- oder
+            Werbedienste ein.
+          </p>
+
+          <h3 className="legal-subheading" id="browser-heading">
+            Speicherung im Browser
+          </h3>
+          <p>
+            Ihr Studienplan und ausgeblendete Kurse werden lokal im Speicher
+            Ihres Browsers (localStorage) abgelegt und nicht auf dem Server
+            gespeichert. Diese Speicherung ist für die von Ihnen genutzte
+            Funktion unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Sie
+            können die Daten jederzeit entfernen, indem Sie den Studienplan
+            zurücksetzen oder die Websitedaten in Ihrem Browser löschen.
+          </p>
+          <p>
+            Ein über „Plan teilen“ erzeugter Link enthält die Planangaben
+            (Kursnummern, Starttermine und ausgeblendete Kurse) in der Adresse.
+            Beim Aufruf gelangen sie wie jede Adresse in die Server-Logdateien.
+            Angaben zu Ihrer Person enthält der Link nicht.
           </p>
 
           <h3 className="legal-subheading" id="hosting-heading">
@@ -140,7 +162,7 @@ export default function ImpressumPage() {
             Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse
             an einem sicheren und effizienten Betrieb der Website). Näheres zu
             Speicherdauer und weiteren Verarbeitungen entnehmen Sie bitte der
-            Datenschutzerklärung Ihres Hosting-Anbieters.
+            Datenschutzerklärung des Hosting-Anbieters.
           </p>
 
           <h3 className="legal-subheading" id="kurse-heading">
@@ -158,7 +180,7 @@ export default function ImpressumPage() {
           <h3 className="legal-subheading" id="rechte-heading">
             Ihre Rechte
           </h3>
-          <p>Sie haben — soweit die gesetzlichen Voraussetzungen erfüllt sind — insbesondere:</p>
+          <p>Soweit die gesetzlichen Voraussetzungen erfüllt sind, haben Sie insbesondere:</p>
           <ul className="legal-list">
             <li>
               das Recht auf Auskunft über die Sie betreffenden gespeicherten
@@ -174,20 +196,9 @@ export default function ImpressumPage() {
             </li>
             <li>
               das Recht, einer auf Art. 6 Abs. 1 lit. e oder f DSGVO beruhenden
-              Verarbeitung zu widersprechen (Art. 21 DSGVO),
-            </li>
-            <li>
-              das Recht, eine erteilte Einwilligung jederzeit mit Wirkung für die
-              Zukunft zu widerrufen (Art. 7 Abs. 3 DSGVO).
+              Verarbeitung zu widersprechen (Art. 21 DSGVO).
             </li>
           </ul>
-          <p>
-            Darüber hinaus haben Sie das Recht, sich bei einer
-            Datenschutzaufsichtsbehörde zu beschweren (Art. 77 DSGVO),
-            insbesondere beim Landesdatenschutzbeauftragten des Bundeslandes,
-            in dem Sie wohnen, arbeiten oder von dem aus die mutmaßliche
-            Verletzung stammt.
-          </p>
 
           <h3 className="legal-subheading" id="beschwerde-heading">
             Beschwerderecht
@@ -195,9 +206,10 @@ export default function ImpressumPage() {
           <p>
             Ungeachtet eines anderweitigen verwaltungsrechtlichen oder
             gerichtlichen Rechtsbehelfs steht Ihnen das Recht auf Beschwerde bei
-            einer Aufsichtsbehörde zu, wenn Sie der Ansicht sind, dass die
-            Verarbeitung der Sie betreffenden personenbezogenen Daten gegen die
-            DSGVO verstößt.
+            einer Aufsichtsbehörde zu (Art. 77 DSGVO), insbesondere in dem
+            Bundesland, in dem Sie wohnen oder arbeiten, wenn Sie der Ansicht
+            sind, dass die Verarbeitung der Sie betreffenden personenbezogenen
+            Daten gegen die DSGVO verstößt.
           </p>
         </section>
 

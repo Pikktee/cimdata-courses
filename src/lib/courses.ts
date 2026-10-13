@@ -5,10 +5,6 @@ function dateFromIso(isoDate: string): Date {
   return new Date(`${isoDate}T00:00:00.000Z`);
 }
 
-function todayUtcMidnight(): Date {
-  return dateFromIso(new Date().toISOString().slice(0, 10));
-}
-
 /** Heutiges Datum in Europe/Berlin als ISO-Tag (YYYY-MM-DD). */
 export function todayIsoBerlin(now: Date = new Date()): string {
   // en-CA liefert das Format YYYY-MM-DD.
@@ -19,6 +15,26 @@ export function todayIsoBerlin(now: Date = new Date()): string {
     day: "2-digit"
   }).format(now);
 }
+
+/** Prüft auf ein echtes Kalenderdatum im Format YYYY-MM-DD. */
+export function isIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = dateFromIso(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function formatBerlin(date: Date): string {
+  return date.toLocaleString("de-DE", { timeZone: "Europe/Berlin" });
+}
+
+/** Ein Lauf, der länger als das hier „running“ ist, gilt als abgebrochen. */
+const STALE_RUN_MS = 10 * 60 * 1000;
+
+/**
+ * Liefert der Abruf weniger als diesen Anteil der bisher aktiven Kurse, wird
+ * nichts geschrieben (Schutz vor leeren oder halben Antworten der Quelle).
+ */
+const MIN_SCRAPE_SHARE = 0.5;
 
 function formatRefreshError(error: unknown): string {
   if (error instanceof Error) {
@@ -44,6 +60,20 @@ function formatRefreshError(error: unknown): string {
 }
 
 export async function refreshCoursesFromSource() {
+  // Hängende Läufe (z. B. von der Plattform nach maxDuration abgebrochen)
+  // blockieren sonst jeden weiteren Refresh.
+  await db.refreshRun.updateMany({
+    where: {
+      status: "running",
+      startedAt: { lt: new Date(Date.now() - STALE_RUN_MS) }
+    },
+    data: {
+      status: "failed",
+      message: "Abgebrochen: Der Lauf wurde nicht innerhalb von 10 Minuten beendet.",
+      finishedAt: new Date()
+    }
+  });
+
   const runningRefresh = await db.refreshRun.findFirst({
     where: { status: "running" },
     orderBy: [{ startedAt: "asc" }, { id: "asc" }]
@@ -56,7 +86,7 @@ export async function refreshCoursesFromSource() {
       message: [
         "Doppel-Refresh verhindert: Es läuft bereits ein Refresh.",
         `Lauf-ID: ${runningRefresh.id}`,
-        `Gestartet: ${runningRefresh.startedAt.toLocaleString("de-DE")}`
+        `Gestartet: ${formatBerlin(runningRefresh.startedAt)}`
       ].join("\n")
     };
   }
@@ -79,7 +109,7 @@ export async function refreshCoursesFromSource() {
         "Doppel-Refresh verhindert: Ein anderer Lauf hat den Vorrang.",
         `Aktueller Lauf: ${refreshRun.id}`,
         firstRunningRefresh
-          ? `Aktiver Lauf: ${firstRunningRefresh.id} (seit ${firstRunningRefresh.startedAt.toLocaleString("de-DE")})`
+          ? `Aktiver Lauf: ${firstRunningRefresh.id} (seit ${formatBerlin(firstRunningRefresh.startedAt)})`
           : "Aktiver Lauf konnte nicht eindeutig bestimmt werden."
       ].join("\n");
 
@@ -100,9 +130,23 @@ export async function refreshCoursesFromSource() {
     }
 
     const { courses, source } = await scrapeCimdataCourses();
+
+    const activeCourseCount = await db.course.count({
+      where: { category: "Kurs", archivedAt: null }
+    });
+    if (
+      courses.length === 0 ||
+      courses.length < Math.floor(activeCourseCount * MIN_SCRAPE_SHARE)
+    ) {
+      throw new Error(
+        `Unplausibler Abruf: ${courses.length} Kurse gefunden, bisher ${activeCourseCount} aktiv. ` +
+          "Es wurde nichts geändert."
+      );
+    }
+
     const scrapedSlugs = new Set<string>();
     const now = new Date();
-    const today = todayUtcMidnight();
+    const today = dateFromIso(todayIsoBerlin());
     let foundStarts = 0;
 
     for (const course of courses) {
@@ -138,16 +182,17 @@ export async function refreshCoursesFromSource() {
 
       const scrapedDates = course.startDates.map((item) => dateFromIso(item.isoDate));
 
-      // Vergangene Termine bleiben als Historie erhalten. Nur zukünftige Termine
-      // (ab heute), die nicht mehr im aktuellen Scrape stehen, werden entfernt –
-      // so spiegeln Absagen/Verschiebungen sich wider, ohne die Vergangenheit zu verlieren.
+      // Vergangene Termine bleiben als Historie erhalten. Nur künftige Termine
+      // (nach heute, Europe/Berlin), die nicht mehr im aktuellen Scrape stehen,
+      // werden entfernt: so spiegeln sich Absagen und Verschiebungen wider, ohne
+      // die Vergangenheit zu verlieren. Der heutige Termin bleibt in jedem Fall.
       await db.courseStart.deleteMany({
         where: {
           courseId: upserted.id,
           startDate:
             scrapedDates.length > 0
-              ? { gte: today, notIn: scrapedDates }
-              : { gte: today }
+              ? { gt: today, notIn: scrapedDates }
+              : { gt: today }
         }
       });
 
@@ -196,7 +241,7 @@ export async function refreshCoursesFromSource() {
     };
   } catch (error) {
     const message = [
-      `Refresh fehlgeschlagen am ${new Date().toLocaleString("de-DE")}.`,
+      `Refresh fehlgeschlagen am ${formatBerlin(new Date())}.`,
       formatRefreshError(error),
       "Hinweis: Bitte prüfe Erreichbarkeit der CIMDATA API, gültige DB-Verbindung und Server-Logs."
     ].join("\n\n");
@@ -219,23 +264,17 @@ export async function refreshCoursesFromSource() {
 }
 
 export async function getCoursesByStartDate(startDate?: string | null) {
-  // Nur aktive (nicht archivierte) Kurse anzeigen. Die Historie vergangener
-  // Termine bleibt in der Datenbank; angezeigt werden Termine ab heute
-  // (Europe/Berlin). Vergangene Termine gehen getrennt mit, damit geteilte
-  // Pläne mit inzwischen vergangenen Terminen weiter aufgelöst werden.
+  // Die Historie vergangener Termine bleibt in der Datenbank; angezeigt werden
+  // Termine ab heute (Europe/Berlin). Vergangene Termine und archivierte Kurse
+  // gehen getrennt mit, damit geteilte Pläne mit inzwischen vergangenen
+  // Terminen oder eingestellten Kursen weiter aufgelöst werden. Die Kursliste
+  // zeigt archivierte Kurse nicht an.
   const today = todayIsoBerlin();
   const todayDate = dateFromIso(today);
 
   const where = startDate
-    ? {
-        archivedAt: null,
-        starts: {
-          some: {
-            startDate: dateFromIso(startDate)
-          }
-        }
-      }
-    : { archivedAt: null };
+    ? { starts: { some: { startDate: dateFromIso(startDate) } } }
+    : {};
 
   const courses: Array<{
     id: number;
@@ -246,6 +285,7 @@ export async function getCoursesByStartDate(startDate?: string | null) {
     durationText: string | null;
     scheduleText: string | null;
     locationText: string | null;
+    archivedAt: Date | null;
     starts: Array<{ startDate: Date }>;
   }> = await db.course.findMany({
     where,
@@ -279,21 +319,41 @@ export async function getCoursesByStartDate(startDate?: string | null) {
       durationText: course.durationText,
       scheduleText: course.scheduleText,
       locationText: course.locationText,
+      archived: course.archivedAt !== null,
       startDates: isoDates.filter((iso) => iso >= today),
       pastStartDates: isoDates.filter((iso) => iso < today)
     };
   });
 
-  // Kurse ohne künftige Termine ans Ende (Reihenfolge sonst wie gehabt nach Titel).
-  const sortedCourses = [
-    ...mapped.filter((course) => course.startDates.length > 0),
-    ...mapped.filter((course) => course.startDates.length === 0)
-  ];
+  // Reihenfolge: aktive Kurse mit künftigen Terminen, aktive ohne, archivierte.
+  const rank = (course: (typeof mapped)[number]) =>
+    course.archived ? 2 : course.startDates.length > 0 ? 0 : 1;
+  const sortedCourses = [...mapped].sort((a, b) => rank(a) - rank(b));
 
   return {
     today,
     availableStartDates: dateRows.map((row) => row.startDate.toISOString().slice(0, 10)),
     courses: sortedCourses
+  };
+}
+
+/** Öffentliche Sicht auf einen Refresh-Lauf: ohne Fehlermeldung (enthält Stacktraces). */
+export function toPublicRefreshRun(
+  run: {
+    status: string;
+    foundCourses: number;
+    foundStarts: number;
+    startedAt: Date;
+    finishedAt: Date | null;
+  } | null
+) {
+  if (!run) return null;
+  return {
+    status: run.status,
+    foundCourses: run.foundCourses,
+    foundStarts: run.foundStarts,
+    startedAt: run.startedAt.toISOString(),
+    finishedAt: run.finishedAt?.toISOString() ?? null
   };
 }
 

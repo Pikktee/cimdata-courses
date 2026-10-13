@@ -1,7 +1,12 @@
+type DateFilterOption = {
+  value: string;
+  label: string;
+};
+
 type DateFilterProps = {
-  options: string[];
-  /** Heutiges Datum (YYYY-MM-DD); frühere Optionen werden als vergangen markiert. */
-  today: string;
+  options: DateFilterOption[];
+  /** Beschriftung der Option „alle Termine“, z. B. mit Kursanzahl. */
+  allLabel: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -9,15 +14,9 @@ type DateFilterProps = {
   className?: string;
 };
 
-function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-");
-  if (!year || !month || !day) return isoDate;
-  return `${day}.${month}.${year}`;
-}
-
 export function DateFilter({
   options,
-  today,
+  allLabel,
   value,
   onChange,
   disabled = false,
@@ -26,7 +25,7 @@ export function DateFilter({
   return (
     <div className={className ? `control-card ${className}` : "control-card"}>
       <div className="control-head">
-        <span className="control-label">
+        <label htmlFor="startdate" className="control-label">
           <svg
             width="14"
             height="14"
@@ -43,12 +42,9 @@ export function DateFilter({
             <path d="M16 2v4M8 2v4M3 10h18" />
           </svg>
           Startdatum
-        </span>
+        </label>
       </div>
 
-      <label htmlFor="startdate" className="sr-only">
-        Startdatum
-      </label>
       <select
         id="startdate"
         className="select-input"
@@ -56,12 +52,10 @@ export function DateFilter({
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
       >
-        <option value="all">
-          Alle Termine ({options.filter((date) => date >= today).length})
-        </option>
-        {options.map((date) => (
-          <option key={date} value={date}>
-            {date < today ? `${formatDate(date)} (vergangen)` : formatDate(date)}
+        <option value="all">{allLabel}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>

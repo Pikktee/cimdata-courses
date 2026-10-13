@@ -13,6 +13,7 @@ type CourseItem = {
   locationText: string | null;
   startDates: string[];
   pastStartDates: string[];
+  archived: boolean;
 };
 
 type ScrollToCourseRequest = {
@@ -22,6 +23,9 @@ type ScrollToCourseRequest = {
 
 type CourseListProps = {
   courses: CourseItem[];
+  /** Aktueller Suchbegriff (getrimmt), für den Leerzustand. */
+  searchQuery?: string;
+  onClearSearch?: () => void;
   activeDate: string;
   /** Gewählter Termin liegt in der Vergangenheit (z. B. aus einem geteilten Plan). */
   isPastDate?: boolean;
@@ -93,6 +97,8 @@ function CourseStartDates({ startDates }: { startDates: string[] }) {
 
 export function CourseList({
   courses,
+  searchQuery = "",
+  onClearSearch,
   activeDate,
   isPastDate = false,
   selectedByDate,
@@ -169,16 +175,25 @@ export function CourseList({
       <section className="empty-state">
         <h2>Keine Kurse gefunden</h2>
         <p>
-          {activeDate === "all"
-            ? "Aktuell wurden keine Kurse gefunden."
-            : `Für den Termin ${formatDate(activeDate)} wurden aktuell keine Kurse gefunden.`}
+          {searchQuery
+            ? activeDate === "all"
+              ? `Kein Kurs passt zu „${searchQuery}“.`
+              : `Am ${formatDate(activeDate)} startet kein Kurs, der zu „${searchQuery}“ passt.`
+            : activeDate === "all"
+              ? "Aktuell wurden keine Kurse gefunden."
+              : `Für den Termin ${formatDate(activeDate)} wurden aktuell keine Kurse gefunden.`}
         </p>
+        {searchQuery && onClearSearch ? (
+          <button type="button" className="empty-state-action" onClick={onClearSearch}>
+            Suche leeren
+          </button>
+        ) : null}
       </section>
     );
   }
 
   return (
-    <section className="course-list-stack" aria-live="polite">
+    <section className="course-list-stack" aria-label="Kurse">
       {visibleCourses.length > 0 ? (
         <div className="course-grid">
           {visibleCourses.map((course) => {
@@ -222,13 +237,13 @@ export function CourseList({
                 <div className="course-card-corner">
                   <div
                     className="course-plan-tooltip-wrap has-tooltip course-card-action-minimize"
-                    data-tooltip="Kurs minimieren"
+                    data-tooltip="Kurs ausblenden"
                   >
                     <button
                       type="button"
                       className="course-minimize-btn"
                       onClick={() => startMinimize(course.id)}
-                      aria-label="Kurs minimieren"
+                      aria-label="Kurs ausblenden"
                     >
                       <svg viewBox="0 0 24 24" aria-hidden>
                         <path
@@ -242,9 +257,15 @@ export function CourseList({
                     </button>
                   </div>
                 </div>
-                <div className="course-meta-row">
-                  <p className="course-meta">{course.area ?? "Allgemein"}</p>
-                </div>
+                {course.area ? (
+                  <div className="course-meta-row">
+                    {course.area.split(", ").map((tag) => (
+                      <span key={tag} className="course-meta">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <h3>{course.title}</h3>
                 <dl className="course-details">
                   <div className="course-detail-row">
@@ -343,7 +364,7 @@ export function CourseList({
         </div>
       ) : (
         <section className="empty-state">
-          <h2>Alle sichtbaren Kurse sind minimiert</h2>
+          <h2>Alle passenden Kurse sind ausgeblendet</h2>
           <p>Nutze den Bereich „Ausgeblendete Kurse“, um Kurse wieder einzublenden.</p>
         </section>
       )}
@@ -359,7 +380,7 @@ export function CourseList({
               <li key={course.id} className="minimized-course-item">
                 <div className="minimized-course-main">
                   <p className="minimized-course-title">{course.title}</p>
-                  <p className="minimized-course-meta">{course.area ?? "Allgemein"}</p>
+                  {course.area ? <p className="minimized-course-meta">{course.area}</p> : null}
                 </div>
                 <div className="minimized-course-actions">
                   <button

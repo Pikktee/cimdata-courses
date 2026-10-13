@@ -11,6 +11,7 @@ import {
   useState
 } from "react";
 import { CourseList } from "@/components/CourseList";
+import { CourseSearch } from "@/components/CourseSearch";
 import { DateFilter } from "@/components/DateFilter";
 
 type CourseItem = {
@@ -26,6 +27,8 @@ type CourseItem = {
   startDates: string[];
   /** Vergangene Termine: nur für geteilte Pläne, nicht zur Anzeige. */
   pastStartDates: string[];
+  /** Kurs ist bei CIMDATA nicht mehr im Angebot; nur für geteilte Pläne geliefert. */
+  archived: boolean;
 };
 
 type LatestRefresh = {
@@ -34,7 +37,6 @@ type LatestRefresh = {
   foundStarts: number;
   startedAt: string;
   finishedAt: string | null;
-  message: string | null;
 } | null;
 
 type CoursesResponse = {
@@ -56,13 +58,53 @@ function parseIsoDate(iso: string): Date {
   return new Date(`${iso}T00:00:00Z`);
 }
 
+/** Echtes Kalenderdatum im Format YYYY-MM-DD (schützt vor kaputten Links). */
+function isIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = parseIsoDate(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function addDaysIso(iso: string, days: number): string {
+  return new Date(parseIsoDate(iso).getTime() + days * MS_PER_DAY).toISOString().slice(0, 10);
+}
+
+/** Kleinbuchstaben ohne Akzente, damit „ux“ auch „UX/UI“ und „ae“-freie Eingaben finden. */
+function normalizeSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function matchesSearch(course: CourseItem, words: string[]): boolean {
+  if (words.length === 0) return true;
+  const haystack = normalizeSearchText(`${course.title} ${course.area ?? ""}`);
+  return words.every((word) => haystack.includes(word));
+}
+
+function formatDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-");
+  if (!year || !month || !day) return isoDate;
+  return `${day}.${month}.${year}`;
+}
+
+function formatCourseCount(count: number): string {
+  return count === 1 ? "1 Kurs" : `${count} Kurse`;
+}
+
+/** Dativ, z. B. „mit 3 Kursen“. */
+function formatCourseCountDative(count: number): string {
+  return count === 1 ? "1 Kurs" : `${count} Kursen`;
+}
+
 function parseDurationDays(durationText: string | null): number {
   // Konservativer Default: unbekannte Dauer als 4 Wochen behandeln,
   // damit Überlappungen nicht versehentlich erlaubt werden.
   if (!durationText) return 28;
   const text = durationText.toLowerCase();
   const unitMatches = Array.from(
-    text.matchAll(/(\d+(?:[.,]\d+)?)\s*(tag|tage|woche|wochen|monat|monate)\b/g)
+    text.matchAll(/(\d+(?:[.,]\d+)?)\s*(tag|tage|tagen|woche|wochen|monat|monate|monaten)\b/g)
   )
     .map((match) => {
       const value = Number(match[1].replace(",", "."));
@@ -134,7 +176,9 @@ function getOverlappingPlannedEntry(
   plan: Record<string, number>,
   coursesById: Map<number, CourseItem>,
   candidateCourseId: number,
-  selectedStartDate: string
+  selectedStartDate: string,
+  /** Einträge, die beim Übernehmen ohnehin entfernt werden (Verschieben). */
+  ignoredStartDates: string[] = []
 ): { startDate: string; title: string } | null {
   const candidateCourse = coursesById.get(candidateCourseId);
   if (!candidateCourse) return null;
@@ -146,7 +190,7 @@ function getOverlappingPlannedEntry(
 
   for (const [startDate, plannedCourseId] of Object.entries(plan)) {
     // Der aktuell ausgewählte Slot wird ersetzt und darf daher nicht als Konflikt zählen.
-    if (startDate === selectedStartDate) continue;
+    if (startDate === selectedStartDate || ignoredStartDates.includes(startDate)) continue;
     const plannedCourse = coursesById.get(plannedCourseId);
     if (!plannedCourse) continue;
 
@@ -166,7 +210,12 @@ function getOverlappingPlannedEntry(
 
 function formatDateTime(value: string | null): string {
   if (!value) return "k. A.";
-  return new Date(value).toLocaleString("de-DE");
+  // Feste Zeitzone: Server (UTC) und Browser müssen denselben Text erzeugen.
+  return new Date(value).toLocaleString("de-DE", {
+    timeZone: "Europe/Berlin",
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
 }
 
 function encodePlanParam(plan: Record<string, number>): string {
@@ -186,12 +235,43 @@ function decodePlanParam(raw: string, coursesById: Map<number, CourseItem>): Rec
     .map((part) => {
       const [startDate, courseIdRaw] = part.split(":");
       const courseId = Number(courseIdRaw);
-      if (!startDate || !Number.isInteger(courseId) || !coursesById.has(courseId)) return null;
+      if (!startDate || !isIsoDate(startDate)) return null;
+      if (!Number.isInteger(courseId) || !coursesById.has(courseId)) return null;
       return [startDate, courseId] as const;
     })
     .filter((entry): entry is readonly [string, number] => entry !== null);
   return Object.fromEntries(entries);
 }
+
+/** Plan aus localStorage: nur gültige Daten und bekannte Kurse übernehmen. */
+function sanitizePlan(value: unknown, coursesById: Map<number, CourseItem>): Record<string, number> {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      ([startDate, courseId]) =>
+        isIsoDate(startDate) &&
+        typeof courseId === "number" &&
+        Number.isInteger(courseId) &&
+        coursesById.has(courseId)
+    )
+  );
+}
+
+type PlanEntryStatus = "upcoming" | "past" | "archived" | "dateGone";
+
+/** Ob ein Plan-Eintrag noch buchbar ist oder warum nicht. */
+function getPlanEntryStatus(course: CourseItem, startDate: string, today: string): PlanEntryStatus {
+  if (startDate < today) return "past";
+  if (course.archived) return "archived";
+  if (!course.startDates.includes(startDate)) return "dateGone";
+  return "upcoming";
+}
+
+const PLAN_ENTRY_STATUS_LABEL: Record<Exclude<PlanEntryStatus, "upcoming">, string> = {
+  past: "Termin vergangen",
+  archived: "Kurs nicht mehr im Angebot",
+  dateGone: "Termin nicht mehr im Angebot"
+};
 
 function encodeMinimizedParam(ids: number[]): string {
   return ids.filter(Number.isInteger).join(",");
@@ -215,6 +295,7 @@ export function CourseBrowser({
   initial: CoursesResponse;
 }) {
   const [selectedDate, setSelectedDate] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCoursesByDate, setSelectedCoursesByDate] = useState<Record<string, number>>({});
   const [minimizedCourseIds, setMinimizedCourseIds] = useState<number[]>([]);
   const [hasLoadedLocalPlan, setHasLoadedLocalPlan] = useState(false);
@@ -231,6 +312,13 @@ export function CourseBrowser({
         newStartDate: string;
         removeStartDates: string[];
       }
+    | {
+        kind: "sharedPlan";
+        plan: Record<string, number>;
+        /** Ausgeblendete Kurse aus dem Link, null wenn der Link keine enthält. */
+        minimized: number[] | null;
+        ownCount: number;
+      }
   >(null);
   const [scrollToCourseRequest, setScrollToCourseRequest] = useState<{
     courseId: number;
@@ -238,6 +326,8 @@ export function CourseBrowser({
   } | null>(null);
   const planConfirmTitleId = useId();
   const planConfirmCancelRef = useRef<HTMLButtonElement>(null);
+  const planConfirmDialogRef = useRef<HTMLDivElement>(null);
+  const focusBeforeDialogRef = useRef<HTMLElement | null>(null);
 
   const handleDateChange = useCallback((value: string) => {
     setSelectedDate(value);
@@ -249,49 +339,72 @@ export function CourseBrowser({
   }, [initial.courses]);
 
   useEffect(() => {
+    // Gespeicherter Plan dieses Browsers.
+    let ownPlan: Record<string, number> = {};
+    let ownMinimized: number[] = [];
     try {
+      const raw = window.localStorage.getItem(STUDY_PLAN_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          selectedCoursesByDate?: unknown;
+          minimizedCourseIds?: unknown;
+        };
+        ownPlan = sanitizePlan(parsed.selectedCoursesByDate, coursesById);
+        if (Array.isArray(parsed.minimizedCourseIds)) {
+          ownMinimized = Array.from(
+            new Set(
+              parsed.minimizedCourseIds.filter(
+                (courseId): courseId is number =>
+                  typeof courseId === "number" &&
+                  Number.isInteger(courseId) &&
+                  coursesById.has(courseId)
+              )
+            )
+          );
+        }
+      }
+    } catch {
+      // Unlesbarer lokaler Stand: sauber starten.
+    }
+
+    try {
+      // Zustand aus einem geteilten Link. Ein Link mit nur einem Datum lässt den
+      // eigenen Plan unangetastet.
       const searchParams = new URLSearchParams(window.location.search);
       const urlPlanRaw = searchParams.get(PERMALINK_PLAN_PARAM);
       const urlMinRaw = searchParams.get(PERMALINK_MINIMIZED_PARAM);
       const urlDate = searchParams.get(PERMALINK_DATE_PARAM);
-      if (urlPlanRaw || urlMinRaw || urlDate) {
-        setSelectedCoursesByDate(decodePlanParam(urlPlanRaw ?? "", coursesById));
-        setMinimizedCourseIds(decodeMinimizedParam(urlMinRaw ?? "", coursesById));
-        if (urlDate && (urlDate === "all" || /^\d{4}-\d{2}-\d{2}$/.test(urlDate))) {
-          setSelectedDate(urlDate);
-        }
-        setHasLoadedLocalPlan(true);
-        return;
+      const sharedPlan = urlPlanRaw !== null ? decodePlanParam(urlPlanRaw, coursesById) : null;
+      const sharedMinimized =
+        urlMinRaw !== null ? decodeMinimizedParam(urlMinRaw, coursesById) : null;
+
+      if (urlDate && (urlDate === "all" || isIsoDate(urlDate))) {
+        setSelectedDate(urlDate);
       }
 
-      const raw = window.localStorage.getItem(STUDY_PLAN_STORAGE_KEY);
-      if (!raw) {
-        setHasLoadedLocalPlan(true);
-        return;
-      }
+      const ownPlanCount = Object.keys(ownPlan).length;
+      const conflictsWithOwnPlan =
+        sharedPlan !== null &&
+        Object.keys(sharedPlan).length > 0 &&
+        ownPlanCount > 0 &&
+        encodePlanParam(sharedPlan) !== encodePlanParam(ownPlan);
 
-      const parsed = JSON.parse(raw) as {
-        selectedCoursesByDate?: unknown;
-        minimizedCourseIds?: unknown;
-      };
-
-      if (parsed.selectedCoursesByDate && typeof parsed.selectedCoursesByDate === "object") {
-        const nextEntries = Object.entries(parsed.selectedCoursesByDate).filter(
-          ([startDate, courseId]) => typeof startDate === "string" && typeof courseId === "number"
+      if (conflictsWithOwnPlan) {
+        // Nicht ungefragt überschreiben: eigenen Plan zeigen und nachfragen.
+        setSelectedCoursesByDate(ownPlan);
+        setMinimizedCourseIds(ownMinimized);
+        setPlanConfirmDialog({
+          kind: "sharedPlan",
+          plan: sharedPlan,
+          minimized: sharedMinimized,
+          ownCount: ownPlanCount
+        });
+      } else {
+        setSelectedCoursesByDate(
+          sharedPlan && Object.keys(sharedPlan).length > 0 ? sharedPlan : ownPlan
         );
-        setSelectedCoursesByDate(Object.fromEntries(nextEntries));
+        setMinimizedCourseIds(sharedMinimized ?? ownMinimized);
       }
-
-      if (Array.isArray(parsed.minimizedCourseIds)) {
-        const minimized = parsed.minimizedCourseIds.filter(
-          (courseId): courseId is number =>
-            typeof courseId === "number" && Number.isInteger(courseId) && coursesById.has(courseId)
-        );
-        setMinimizedCourseIds(Array.from(new Set(minimized)));
-      }
-
-    } catch {
-      // Ignore unreadable local state and start clean.
     } finally {
       setHasLoadedLocalPlan(true);
     }
@@ -299,13 +412,17 @@ export function CourseBrowser({
 
   useEffect(() => {
     if (!hasLoadedLocalPlan) return;
-    window.localStorage.setItem(
-      STUDY_PLAN_STORAGE_KEY,
-      JSON.stringify({
-        selectedCoursesByDate,
-        minimizedCourseIds
-      })
-    );
+    try {
+      window.localStorage.setItem(
+        STUDY_PLAN_STORAGE_KEY,
+        JSON.stringify({
+          selectedCoursesByDate,
+          minimizedCourseIds
+        })
+      );
+    } catch {
+      // Speicher gesperrt (z. B. privates Fenster): Plan bleibt über den Link erhalten.
+    }
   }, [hasLoadedLocalPlan, minimizedCourseIds, selectedCoursesByDate]);
 
   useEffect(() => {
@@ -341,23 +458,50 @@ export function CourseBrowser({
 
   const isPastSelectedDate = selectedDate !== "all" && selectedDate < initial.today;
 
-  // Ein vergangener Termin (aus einem geteilten Plan oder Link) bleibt wählbar,
-  // solange er ausgewählt ist, taucht aber sonst nicht im Filter auf.
+  const searchWords = useMemo(
+    () => normalizeSearchText(searchQuery).split(/\s+/).filter(Boolean),
+    [searchQuery]
+  );
+
+  // Archivierte Kurse dienen nur der Auflösung geteilter Pläne.
+  const searchedCourses = useMemo(
+    () => initial.courses.filter((course) => !course.archived && matchesSearch(course, searchWords)),
+    [initial.courses, searchWords]
+  );
+
+  // Ein Termin, der nicht mehr angeboten wird (vergangen oder entfallen, etwa aus
+  // einem geteilten Plan), bleibt wählbar, solange er ausgewählt ist.
   const dateOptions = useMemo(() => {
-    if (selectedDate === "all" || initial.availableStartDates.includes(selectedDate)) {
-      return initial.availableStartDates;
+    const countByDate = new Map<string, number>();
+    for (const course of searchedCourses) {
+      for (const date of course.startDates) {
+        countByDate.set(date, (countByDate.get(date) ?? 0) + 1);
+      }
     }
-    return [...initial.availableStartDates, selectedDate].sort((a, b) => a.localeCompare(b));
-  }, [initial.availableStartDates, selectedDate]);
+    const dates =
+      selectedDate === "all" || initial.availableStartDates.includes(selectedDate)
+        ? initial.availableStartDates
+        : [...initial.availableStartDates, selectedDate].sort((a, b) => a.localeCompare(b));
+    return dates.map((date) => {
+      const offered = initial.availableStartDates.includes(date);
+      const suffix =
+        date < initial.today
+          ? "vergangen"
+          : offered
+            ? formatCourseCount(countByDate.get(date) ?? 0)
+            : "nicht mehr im Angebot";
+      return { value: date, label: `${formatDate(date)} · ${suffix}` };
+    });
+  }, [initial.availableStartDates, initial.today, searchedCourses, selectedDate]);
 
   const filteredCourses = useMemo(() => {
-    return initial.courses.filter(
+    return searchedCourses.filter(
       (course) =>
         selectedDate === "all" ||
         course.startDates.includes(selectedDate) ||
         course.pastStartDates.includes(selectedDate)
     );
-  }, [initial.courses, selectedDate]);
+  }, [searchedCourses, selectedDate]);
 
   const plannedEntries = useMemo(() => {
     return Object.entries(selectedCoursesByDate)
@@ -369,12 +513,6 @@ export function CourseBrowser({
       .filter((entry): entry is { startDate: string; course: CourseItem } => entry !== null)
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [coursesById, selectedCoursesByDate]);
-
-  const formatDate = useCallback((isoDate: string) => {
-    const [year, month, day] = isoDate.split("-");
-    if (!year || !month || !day) return isoDate;
-    return `${day}.${month}.${year}`;
-  }, []);
 
   const performAssignToSelectedDate = useCallback(
     (courseId: number, slotDate: string) => {
@@ -410,11 +548,18 @@ export function CourseBrowser({
         );
         return;
       }
-      const overlappingEntry = getOverlappingPlannedEntry(
+      const duplicateSlots = findDuplicatePlanSlotsElsewhere(
         selectedCoursesByDate,
         coursesById,
         courseId,
         selectedDate
+      );
+      const overlappingEntry = getOverlappingPlannedEntry(
+        selectedCoursesByDate,
+        coursesById,
+        courseId,
+        selectedDate,
+        duplicateSlots
       );
       if (overlappingEntry) {
         const candidate = coursesById.get(courseId);
@@ -425,12 +570,6 @@ export function CourseBrowser({
         );
         return;
       }
-      const duplicateSlots = findDuplicatePlanSlotsElsewhere(
-        selectedCoursesByDate,
-        coursesById,
-        courseId,
-        selectedDate
-      );
       if (duplicateSlots.length > 0) {
         setPlanActionNotice(null);
         setPlanConfirmDialog({
@@ -449,7 +588,6 @@ export function CourseBrowser({
       isPastSelectedDate,
       selectedCoursesByDate,
       coursesById,
-      formatDate,
       performAssignToSelectedDate
     ]
   );
@@ -524,6 +662,15 @@ export function CourseBrowser({
       performClearStudyPlan();
       return;
     }
+    if (planConfirmDialog.kind === "sharedPlan") {
+      setSelectedCoursesByDate(planConfirmDialog.plan);
+      if (planConfirmDialog.minimized) {
+        setMinimizedCourseIds(planConfirmDialog.minimized);
+      }
+      setPlanConfirmDialog(null);
+      setPlanActionNotice("Geteilter Studienplan übernommen.");
+      return;
+    }
     const { courseId, newStartDate, removeStartDates } = planConfirmDialog;
     setPlanConfirmDialog(null);
     setPlanActionNotice(null);
@@ -552,25 +699,52 @@ export function CourseBrowser({
     }, 650);
   }, [planConfirmDialog, performClearStudyPlan, selectedCoursesByDate]);
 
+  const isPlanDialogOpen = planConfirmDialog !== null;
+
   useEffect(() => {
-    if (!planConfirmDialog) return;
+    if (!isPlanDialogOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         setPlanConfirmDialog(null);
+        return;
+      }
+      // Fokus im Dialog halten (aria-modal allein verhindert das Hinaustabben nicht).
+      if (e.key === "Tab") {
+        const buttons = Array.from(
+          planConfirmDialogRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []
+        );
+        if (buttons.length === 0) return;
+        const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        const next = e.shiftKey
+          ? index <= 0
+            ? buttons.length - 1
+            : index - 1
+          : index === buttons.length - 1
+            ? 0
+            : index + 1;
+        e.preventDefault();
+        buttons[next]?.focus();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [planConfirmDialog]);
+  }, [isPlanDialogOpen]);
 
   useEffect(() => {
-    if (!planConfirmDialog) return;
+    if (!isPlanDialogOpen) return;
+    focusBeforeDialogRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const id = window.requestAnimationFrame(() => {
       planConfirmCancelRef.current?.focus();
     });
-    return () => window.cancelAnimationFrame(id);
-  }, [planConfirmDialog]);
+    return () => {
+      window.cancelAnimationFrame(id);
+      // Nach dem Schließen zum auslösenden Element zurück.
+      focusBeforeDialogRef.current?.focus();
+      focusBeforeDialogRef.current = null;
+    };
+  }, [isPlanDialogOpen]);
 
   const formattedPeriod = useMemo(() => {
     if (plannedEntries.length === 0) return null;
@@ -579,8 +753,11 @@ export function CourseBrowser({
     if (!first || !lastEntry) return null;
     const lastStart = parseIsoDate(lastEntry.startDate);
     const lastDurationDays = parseDurationDays(lastEntry.course.durationText);
-    const lastEnd = new Date(lastStart.getTime() + lastDurationDays * MS_PER_DAY);
-    const last = lastEnd.toISOString().slice(0, 10);
+    // Letzter Kurstag (inklusiv), nicht der erste freie Tag danach.
+    const last = addDaysIso(
+      lastStart.toISOString().slice(0, 10),
+      lastDurationDays - 1
+    );
     return { first, last };
   }, [plannedEntries]);
 
@@ -627,22 +804,17 @@ export function CourseBrowser({
     [handleDateChange, initial.availableStartDates]
   );
 
-  // Aktualisiert wird nur per Cron (Bearer-Token) oder CLI – bewusst ohne Knopf für Besucher.
-  const latestRefresh = initial.latestRefresh;
-  const refreshTimestampLabel =
-    latestRefresh?.status === "running"
-      ? "Läuft seit"
-      : latestRefresh?.status === "failed"
-        ? "Letzter Versuch"
-        : "Zuletzt synchronisiert";
-  const refreshTimestampValue =
-    latestRefresh?.status === "running"
-      ? formatDateTime(latestRefresh.startedAt)
-      : latestRefresh?.status === "failed"
-        ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
-        : latestRefresh
-          ? formatDateTime(latestRefresh.finishedAt ?? latestRefresh.startedAt)
-          : "Noch kein Refresh";
+  // Aktualisiert wird nur per Cron (Bearer-Token) oder CLI, bewusst ohne Knopf für
+  // Besucher. Angezeigt wird der Stand der Daten, also der letzte erfolgreiche Lauf.
+  const dataRefresh = initial.latestSuccessfulRefresh;
+  const dataRefreshTime = dataRefresh ? (dataRefresh.finishedAt ?? dataRefresh.startedAt) : null;
+
+  const planDialogTitle =
+    planConfirmDialog?.kind === "clear"
+      ? "Studienplan zurücksetzen?"
+      : planConfirmDialog?.kind === "sharedPlan"
+        ? "Geteilten Studienplan übernehmen?"
+        : "Kurs zu diesem Termin verschieben?";
 
   return (
     <>
@@ -651,15 +823,20 @@ export function CourseBrowser({
           <section className="toolbar">
             <DateFilter
               options={dateOptions}
-              today={initial.today}
+              allLabel={`Alle Termine · ${formatCourseCount(searchedCourses.length)}`}
               value={selectedDate}
               onChange={handleDateChange}
               disabled={false}
               className="control-card--sidebar"
             />
+            <CourseSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="control-card--sidebar"
+            />
           </section>
 
-          <aside className="plan-panel control-card control-card--sidebar" aria-live="polite">
+          <aside className="plan-panel control-card control-card--sidebar" aria-label="Studienplan">
             <div className="control-head">
               <span className="control-label">
                 <svg
@@ -731,7 +908,7 @@ export function CourseBrowser({
                           {" "}
                           ·{" "}
                         </span>
-                        {formatDate(formattedPeriod.first)} — {formatDate(formattedPeriod.last)}
+                        {formatDate(formattedPeriod.first)} bis {formatDate(formattedPeriod.last)}
                       </>
                     )}
                   </p>
@@ -745,6 +922,11 @@ export function CourseBrowser({
                       selectedDate !== "all" &&
                       plannedEntries[index + 1]?.startDate === selectedDate;
                     const gapAfter = planGapByAfterStartDate.get(entry.startDate);
+                    const entryStatus = getPlanEntryStatus(
+                      entry.course,
+                      entry.startDate,
+                      initial.today
+                    );
                     return (
                     <Fragment key={`${entry.startDate}-${entry.course.id}`}>
                       <li
@@ -756,7 +938,7 @@ export function CourseBrowser({
                           isBeforeActiveStartSlot ? " plan-course-item--before-active" : ""
                         }${
                           gapAfter ? " plan-course-item--with-gap-after" : ""
-                        }`}
+                        }${entryStatus !== "upcoming" ? " plan-course-item--inactive" : ""}`}
                       >
                         <button
                           type="button"
@@ -767,6 +949,11 @@ export function CourseBrowser({
                           aria-label={`Startdatum ${formatDate(entry.startDate)} wählen und zur Kurskarte scrollen: ${entry.course.title}`}
                         >
                           <span className="plan-course-date">{formatDate(entry.startDate)}</span>
+                          {entryStatus !== "upcoming" ? (
+                            <span className="plan-course-status">
+                              {PLAN_ENTRY_STATUS_LABEL[entryStatus]}
+                            </span>
+                          ) : null}
                           <span className="plan-course-title">{entry.course.title}</span>
                           {entry.course.scheduleText ? (
                             <span className="plan-course-detail">{entry.course.scheduleText}</span>
@@ -787,7 +974,7 @@ export function CourseBrowser({
                             <span className="plan-gap-meta">
                               <span className="plan-gap-kicker">Freie Zeit</span>
                               <span className="plan-gap-range">
-                                {formatDate(gapAfter.from)} – {formatDate(gapAfter.to)}
+                                {formatDate(gapAfter.from)} bis {formatDate(gapAfter.to)}
                               </span>
                             </span>
                             <span className="plan-gap-cta">Kursliste anzeigen</span>
@@ -805,8 +992,13 @@ export function CourseBrowser({
           </aside>
         </aside>
 
+        <p className="sr-only" role="status">
+          {formatCourseCount(filteredCourses.length)} angezeigt
+        </p>
         <CourseList
           courses={filteredCourses}
+          searchQuery={searchQuery.trim()}
+          onClearSearch={() => setSearchQuery("")}
           activeDate={selectedDate}
           isPastDate={isPastSelectedDate}
           selectedByDate={selectedCoursesByDate}
@@ -820,7 +1012,7 @@ export function CourseBrowser({
         />
       </section>
 
-      <footer className="list-footer" aria-live="polite">
+      <footer className="list-footer">
         <div className="footer-bar">
           <p className="footer-bar-impressum">
             <Link href="/impressum" className="footer-impressum-link">
@@ -829,20 +1021,13 @@ export function CourseBrowser({
           </p>
           <div className="footer-bar-sync">
             <span className="footer-sync-meta">
-              <span className="footer-sync-label">{refreshTimestampLabel}:</span>{" "}
-              {latestRefresh ? (
-                <time
-                  className="footer-sync-time"
-                  dateTime={
-                    latestRefresh.status === "running"
-                      ? latestRefresh.startedAt
-                      : (latestRefresh.finishedAt ?? latestRefresh.startedAt)
-                  }
-                >
-                  {refreshTimestampValue}
+              <span className="footer-sync-label">Kursdaten abgeglichen:</span>{" "}
+              {dataRefreshTime ? (
+                <time className="footer-sync-time" dateTime={dataRefreshTime}>
+                  {formatDateTime(dataRefreshTime)}
                 </time>
               ) : (
-                <span className="footer-sync-time">{refreshTimestampValue}</span>
+                <span className="footer-sync-time">noch nicht</span>
               )}
             </span>
           </div>
@@ -858,6 +1043,7 @@ export function CourseBrowser({
           }}
         >
           <div
+            ref={planConfirmDialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={planConfirmTitleId}
@@ -865,9 +1051,7 @@ export function CourseBrowser({
             onMouseDown={(e) => e.stopPropagation()}
           >
             <h2 id={planConfirmTitleId} className="plan-confirm-title">
-              {planConfirmDialog.kind === "clear"
-                ? "Studienplan zurücksetzen?"
-                : "Kurs zu diesem Termin verschieben?"}
+              {planDialogTitle}
             </h2>
             <p className="plan-confirm-body">
               {planConfirmDialog.kind === "clear" ? (
@@ -878,6 +1062,14 @@ export function CourseBrowser({
                     {planConfirmDialog.courseCount === 1 ? "Kurs" : "Kurse"}
                   </strong>{" "}
                   werden aus dem Plan entfernt. Das kann nicht rückgängig gemacht werden.
+                </>
+              ) : planConfirmDialog.kind === "sharedPlan" ? (
+                <>
+                  Dieser Link enthält einen Studienplan mit{" "}
+                  <strong>{formatCourseCountDative(Object.keys(planConfirmDialog.plan).length)}</strong>.
+                  In diesem Browser ist bereits dein eigener Plan mit{" "}
+                  <strong>{formatCourseCountDative(planConfirmDialog.ownCount)}</strong> gespeichert.
+                  Übernimmst du den geteilten Plan, ersetzt er deinen eigenen.
                 </>
               ) : (
                 <>
@@ -898,14 +1090,18 @@ export function CourseBrowser({
                 className="plan-confirm-btn plan-confirm-btn--secondary"
                 onClick={() => setPlanConfirmDialog(null)}
               >
-                Abbrechen
+                {planConfirmDialog.kind === "sharedPlan" ? "Eigenen behalten" : "Abbrechen"}
               </button>
               <button
                 type="button"
                 className="plan-confirm-btn plan-confirm-btn--danger"
                 onClick={confirmPlanDialog}
               >
-                {planConfirmDialog.kind === "clear" ? "Zurücksetzen" : "Übernehmen"}
+                {planConfirmDialog.kind === "clear"
+                  ? "Zurücksetzen"
+                  : planConfirmDialog.kind === "sharedPlan"
+                    ? "Geteilten übernehmen"
+                    : "Übernehmen"}
               </button>
             </div>
           </div>

@@ -3,14 +3,15 @@ import { PlanShareButton } from "@/components/PlanShareButton";
 import {
   getCoursesByStartDate,
   getLatestRefreshRun,
-  getLatestSuccessfulRefreshRun
+  getLatestSuccessfulRefreshRun,
+  toPublicRefreshRun
 } from "@/lib/courses";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const initialData = await getCoursesByStartDate(null);
-  const [latestRefresh, latestSuccessfulRefresh] = await Promise.all([
+  const [initialData, latestRefresh, latestSuccessfulRefresh] = await Promise.all([
+    getCoursesByStartDate(null),
     getLatestRefreshRun(),
     getLatestSuccessfulRefreshRun()
   ]);
@@ -31,7 +32,8 @@ export default async function HomePage() {
           Startterminen und behalte zeitliche Lücken im Blick.
         </p>
         <p className="hero-copy hero-copy-secondary">
-          Quelle:{" "}
+          Unabhängiges Projekt, kein offizielles Angebot von CIMDATA. Kurse und
+          Termine stammen von{" "}
           <a
             className="hero-copy-link"
             href="https://www.cimdata.de/"
@@ -39,32 +41,15 @@ export default async function HomePage() {
             rel="noopener noreferrer"
           >
             cimdata.de
-          </a>
+          </a>{" "}
+          und werden täglich abgeglichen.
         </p>
       </header>
       <CourseBrowser
         initial={{
           ...initialData,
-          latestRefresh: latestRefresh
-            ? {
-                status: latestRefresh.status,
-                foundCourses: latestRefresh.foundCourses,
-                foundStarts: latestRefresh.foundStarts,
-                startedAt: latestRefresh.startedAt.toISOString(),
-                finishedAt: latestRefresh.finishedAt?.toISOString() ?? null,
-                message: latestRefresh.message ?? null
-              }
-            : null,
-          latestSuccessfulRefresh: latestSuccessfulRefresh
-            ? {
-                status: latestSuccessfulRefresh.status,
-                foundCourses: latestSuccessfulRefresh.foundCourses,
-                foundStarts: latestSuccessfulRefresh.foundStarts,
-                startedAt: latestSuccessfulRefresh.startedAt.toISOString(),
-                finishedAt: latestSuccessfulRefresh.finishedAt?.toISOString() ?? null,
-                message: latestSuccessfulRefresh.message ?? null
-              }
-            : null
+          latestRefresh: toPublicRefreshRun(latestRefresh),
+          latestSuccessfulRefresh: toPublicRefreshRun(latestSuccessfulRefresh)
         }}
       />
     </main>

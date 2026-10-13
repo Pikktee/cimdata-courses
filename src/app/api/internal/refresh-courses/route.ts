@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { refreshCoursesFromSource } from "@/lib/courses";
 
@@ -14,8 +15,9 @@ const noStoreHeaders = {
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
-  const auth = request.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
+  const auth = Buffer.from(request.headers.get("authorization") ?? "");
+  const expected = Buffer.from(`Bearer ${secret}`);
+  return auth.length === expected.length && timingSafeEqual(auth, expected);
 }
 
 export async function GET(request: NextRequest) {

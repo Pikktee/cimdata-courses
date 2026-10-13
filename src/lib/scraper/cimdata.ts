@@ -1,7 +1,4 @@
-import {
-  extractConcreteStartDates,
-  type ParsedStartDate
-} from "./normalize";
+import type { ParsedStartDate } from "./normalize";
 import { request as httpsRequest } from "node:https";
 import { rootCertificates } from "node:tls";
 
@@ -95,7 +92,8 @@ async function fetchCoursesPageWithCustomCa(
           accept: "application/json"
         },
         // Keep platform/system root CAs and append missing intermediate chain.
-        ca: [...rootCertificates, SECTIGO_OV_R36_PEM].join("\n")
+        ca: [...rootCertificates, SECTIGO_OV_R36_PEM].join("\n"),
+        timeout: REQUEST_TIMEOUT_MS
       },
       (res) => {
         const chunks: string[] = [];
@@ -135,6 +133,9 @@ async function fetchCoursesPageWithCustomCa(
       }
     );
 
+    req.on("timeout", () => {
+      req.destroy(new Error(`Zeitüberschreitung nach ${REQUEST_TIMEOUT_MS / 1000} s`));
+    });
     req.on("error", (error) => {
       const message = error instanceof Error ? error.message : String(error);
       reject(
@@ -146,6 +147,9 @@ async function fetchCoursesPageWithCustomCa(
     req.end();
   });
 }
+
+/** Obergrenze je API-Abruf, damit ein hängender Abruf den Lauf nicht blockiert. */
+const REQUEST_TIMEOUT_MS = 20_000;
 
 function toIsoDate(value: string): string | null {
   const d = new Date(value);
@@ -171,7 +175,8 @@ async function fetchAllCourseItems(): Promise<EducationCourseApiItem[]> {
       const res = await fetch(url, {
         headers: {
           "accept": "application/json"
-        }
+        },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
       });
 
       if (!res.ok) {

@@ -512,6 +512,76 @@ body {
   outline-offset: 2px;
 }
 
+/* ══ Suche ══ */
+
+.search-field {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  color: var(--text);
+  border: 1.5px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.6rem 2.2rem 0.6rem 0.78rem;
+  background: var(--surface);
+  appearance: none;
+  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+
+.search-input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:hover {
+  border-color: var(--primary-border);
+}
+
+.search-input:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: var(--ring);
+}
+
+.search-clear-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.search-clear-btn svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.search-clear-btn:hover {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.search-clear-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -569,6 +639,29 @@ body {
   max-width: 50ch;
   color: var(--text-muted);
   font-size: 0.92rem;
+}
+
+.empty-state-action {
+  margin-top: 1rem;
+  border: 1px solid var(--plan-accent-border-soft);
+  border-radius: 999px;
+  background: var(--plan-accent-bg);
+  color: var(--plan-accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 650;
+  padding: 0.4rem 0.95rem;
+  cursor: pointer;
+}
+
+.empty-state-action:hover {
+  background: var(--plan-accent-bg-hover);
+  border-color: var(--plan-accent-border);
+}
+
+.empty-state-action:focus-visible {
+  outline: none;
+  box-shadow: var(--plan-accent-ring);
 }
 
 /* ══════════════════════════════════════════════
@@ -641,18 +734,17 @@ body {
   font-weight: 620;
 }
 
-/* Area shown small above title */
+/* Schlagworte von CIMDATA (z. B. „Fokus KI“) als kleine Chips über dem Titel */
 .course-meta {
-  order: -1;
   display: inline-flex;
   align-items: center;
   width: fit-content;
   margin: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--text-muted);
+  padding: 0.12rem 0.5rem;
+  background: var(--surface-alt);
+  color: var(--text-secondary);
   border: none;
-  border-radius: 0;
+  border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -661,6 +753,8 @@ body {
 .course-meta-row {
   order: -1;
   display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
   align-items: center;
   margin-bottom: 0.55rem;
 }
@@ -1430,6 +1524,21 @@ body {
   margin: 0 -1rem;
 }
 
+.plan-course-status {
+  display: block;
+  margin: 0.04rem 0 0.08rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plan-course-item--inactive .plan-course-date,
+.plan-course-item--inactive .plan-course-title {
+  color: var(--text-muted);
+}
+
 .plan-course-date {
   display: block;
   margin: 0 0 0.04rem;
@@ -1904,7 +2013,8 @@ body {
   }
 
   .toolbar {
-    display: block;
+    display: grid;
+    gap: 0.7rem;
   }
 
   .hero-actions {

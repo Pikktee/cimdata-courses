@@ -12,10 +12,20 @@ const displayFont = Fraunces({
   variable: "--font-display"
 });
 
+const description =
+  "CIMDATA-Weiterbildungen nach Starttermin durchsuchen, einen eigenen Studienplan zusammenstellen und als Link teilen.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cimdata-kurse.henrikheil.net"),
   title: "CIMDATA Studienplaner",
-  description:
-    "CIMDATA-Weiterbildungen nach Starttermin durchsuchen, einen persönlichen Studienplan zusammenstellen und per Link teilen — inklusive ausgeblendeter Kurse und aktueller Filter in der URL."
+  description,
+  openGraph: {
+    title: "CIMDATA Studienplaner",
+    description,
+    type: "website",
+    locale: "de_DE",
+    siteName: "CIMDATA Studienplaner"
+  }
 };
 
 export default function RootLayout({
