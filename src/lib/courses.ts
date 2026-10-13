@@ -9,6 +9,17 @@ function todayUtcMidnight(): Date {
   return dateFromIso(new Date().toISOString().slice(0, 10));
 }
 
+/** Heutiges Datum in Europe/Berlin als ISO-Tag (YYYY-MM-DD). */
+export function todayIsoBerlin(now: Date = new Date()): string {
+  // en-CA liefert das Format YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(now);
+}
+
 function formatRefreshError(error: unknown): string {
   if (error instanceof Error) {
     const details = [
@@ -208,8 +219,13 @@ export async function refreshCoursesFromSource() {
 }
 
 export async function getCoursesByStartDate(startDate?: string | null) {
-  // Nur aktive (nicht archivierte) Kurse anzeigen. Termine werden komplett
-  // gezeigt – inkl. vergangener (Historie), damit der Verlauf sichtbar bleibt.
+  // Nur aktive (nicht archivierte) Kurse anzeigen. Die Historie vergangener
+  // Termine bleibt in der Datenbank; angezeigt werden Termine ab heute
+  // (Europe/Berlin). Vergangene Termine gehen getrennt mit, damit geteilte
+  // Pläne mit inzwischen vergangenen Terminen weiter aufgelöst werden.
+  const today = todayIsoBerlin();
+  const todayDate = dateFromIso(today);
+
   const where = startDate
     ? {
         archivedAt: null,
@@ -243,14 +259,18 @@ export async function getCoursesByStartDate(startDate?: string | null) {
   });
 
   const dateRows: Array<{ startDate: Date }> = await db.courseStart.findMany({
+    where: {
+      startDate: { gte: todayDate },
+      course: { archivedAt: null }
+    },
     distinct: ["startDate"],
     orderBy: { startDate: "asc" },
     select: { startDate: true }
   });
 
-  return {
-    availableStartDates: dateRows.map((row) => row.startDate.toISOString().slice(0, 10)),
-    courses: courses.map((course) => ({
+  const mapped = courses.map((course) => {
+    const isoDates = course.starts.map((item) => item.startDate.toISOString().slice(0, 10));
+    return {
       id: course.id,
       slug: course.slug,
       title: course.title,
@@ -259,8 +279,21 @@ export async function getCoursesByStartDate(startDate?: string | null) {
       durationText: course.durationText,
       scheduleText: course.scheduleText,
       locationText: course.locationText,
-      startDates: course.starts.map((item) => item.startDate.toISOString().slice(0, 10))
-    }))
+      startDates: isoDates.filter((iso) => iso >= today),
+      pastStartDates: isoDates.filter((iso) => iso < today)
+    };
+  });
+
+  // Kurse ohne künftige Termine ans Ende (Reihenfolge sonst wie gehabt nach Titel).
+  const sortedCourses = [
+    ...mapped.filter((course) => course.startDates.length > 0),
+    ...mapped.filter((course) => course.startDates.length === 0)
+  ];
+
+  return {
+    today,
+    availableStartDates: dateRows.map((row) => row.startDate.toISOString().slice(0, 10)),
+    courses: sortedCourses
   };
 }
 

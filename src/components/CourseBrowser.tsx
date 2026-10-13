@@ -22,7 +22,10 @@ type CourseItem = {
   durationText: string | null;
   scheduleText: string | null;
   locationText: string | null;
+  /** Termine ab heute (Europe/Berlin). */
   startDates: string[];
+  /** Vergangene Termine: nur für geteilte Pläne, nicht zur Anzeige. */
+  pastStartDates: string[];
 };
 
 type LatestRefresh = {
@@ -35,6 +38,8 @@ type LatestRefresh = {
 } | null;
 
 type CoursesResponse = {
+  /** Heutiges Datum (YYYY-MM-DD, Europe/Berlin), vom Server bestimmt. */
+  today: string;
   availableStartDates: string[];
   courses: CourseItem[];
   latestRefresh: LatestRefresh;
@@ -334,9 +339,23 @@ export function CourseBrowser({
 
   const minimizedCourseIdSet = useMemo(() => new Set(minimizedCourseIds), [minimizedCourseIds]);
 
+  const isPastSelectedDate = selectedDate !== "all" && selectedDate < initial.today;
+
+  // Ein vergangener Termin (aus einem geteilten Plan oder Link) bleibt wählbar,
+  // solange er ausgewählt ist, taucht aber sonst nicht im Filter auf.
+  const dateOptions = useMemo(() => {
+    if (selectedDate === "all" || initial.availableStartDates.includes(selectedDate)) {
+      return initial.availableStartDates;
+    }
+    return [...initial.availableStartDates, selectedDate].sort((a, b) => a.localeCompare(b));
+  }, [initial.availableStartDates, selectedDate]);
+
   const filteredCourses = useMemo(() => {
     return initial.courses.filter(
-      (course) => selectedDate === "all" || course.startDates.includes(selectedDate)
+      (course) =>
+        selectedDate === "all" ||
+        course.startDates.includes(selectedDate) ||
+        course.pastStartDates.includes(selectedDate)
     );
   }, [initial.courses, selectedDate]);
 
@@ -385,6 +404,12 @@ export function CourseBrowser({
   const handleAssignCourse = useCallback(
     (courseId: number) => {
       if (selectedDate === "all") return;
+      if (isPastSelectedDate) {
+        setPlanActionNotice(
+          `Der Termin ${formatDate(selectedDate)} liegt in der Vergangenheit. Bitte wähle einen kommenden Starttermin.`
+        );
+        return;
+      }
       const overlappingEntry = getOverlappingPlannedEntry(
         selectedCoursesByDate,
         coursesById,
@@ -421,6 +446,7 @@ export function CourseBrowser({
     },
     [
       selectedDate,
+      isPastSelectedDate,
       selectedCoursesByDate,
       coursesById,
       formatDate,
@@ -624,7 +650,8 @@ export function CourseBrowser({
         <aside className="planner-sidebar">
           <section className="toolbar">
             <DateFilter
-              options={initial.availableStartDates}
+              options={dateOptions}
+              today={initial.today}
               value={selectedDate}
               onChange={handleDateChange}
               disabled={false}
@@ -781,6 +808,7 @@ export function CourseBrowser({
         <CourseList
           courses={filteredCourses}
           activeDate={selectedDate}
+          isPastDate={isPastSelectedDate}
           selectedByDate={selectedCoursesByDate}
           onAssignCourse={handleAssignCourse}
           onRemoveCourse={handleRemoveCourse}

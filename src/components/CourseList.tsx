@@ -12,6 +12,7 @@ type CourseItem = {
   scheduleText: string | null;
   locationText: string | null;
   startDates: string[];
+  pastStartDates: string[];
 };
 
 type ScrollToCourseRequest = {
@@ -22,6 +23,8 @@ type ScrollToCourseRequest = {
 type CourseListProps = {
   courses: CourseItem[];
   activeDate: string;
+  /** Gewählter Termin liegt in der Vergangenheit (z. B. aus einem geteilten Plan). */
+  isPastDate?: boolean;
   selectedByDate: Record<string, number>;
   onAssignCourse: (courseId: number) => void;
   onRemoveCourse: (startDate: string) => void;
@@ -46,7 +49,7 @@ function CourseStartDates({ startDates }: { startDates: string[] }) {
   const [expanded, setExpanded] = useState(false);
 
   if (!startDates.length) {
-    return <>k. A.</>;
+    return <>Derzeit keine Termine</>;
   }
 
   const sorted = [...startDates].sort((a, b) => a.localeCompare(b));
@@ -91,6 +94,7 @@ function CourseStartDates({ startDates }: { startDates: string[] }) {
 export function CourseList({
   courses,
   activeDate,
+  isPastDate = false,
   selectedByDate,
   onAssignCourse,
   onRemoveCourse,
@@ -187,6 +191,8 @@ export function CourseList({
               ? "Startdatum wählen"
               : isAssigned
                 ? "Bereits im Studienplan"
+                : isPastDate
+                  ? "Termin liegt in der Vergangenheit"
                 : isDuplicateElsewhere
                   ? "Zu diesem Termin verschieben"
                   : isReplacing
@@ -196,6 +202,8 @@ export function CourseList({
               ? "Bitte zuerst in der linken Spalte ein konkretes Startdatum wählen."
               : isAssigned
                 ? `Kurs am ${formattedActiveDate} aus dem Studienplan entfernen.`
+                : isPastDate
+                  ? `Der ${formattedActiveDate} liegt in der Vergangenheit. Bitte einen kommenden Starttermin wählen.`
                 : isDuplicateElsewhere
                   ? "Der bestehende Plan-Eintrag an anderem Startdatum wird nach Bestätigung entfernt und hier übernommen."
                   : isReplacing
@@ -286,7 +294,7 @@ export function CourseList({
                             ? "course-plan-icon-btn-replace"
                             : "course-plan-icon-btn-add"
                       }`}
-                      disabled={!isDateSelected}
+                      disabled={!isDateSelected || (isPastDate && !isAssigned)}
                       onClick={() =>
                         showRemove ? onRemoveCourse(activeDate) : onAssignCourse(course.id)
                       }

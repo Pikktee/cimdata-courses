@@ -1,5 +1,7 @@
 type DateFilterProps = {
   options: string[];
+  /** Heutiges Datum (YYYY-MM-DD); frühere Optionen werden als vergangen markiert. */
+  today: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -15,6 +17,7 @@ function formatDate(isoDate: string): string {
 
 export function DateFilter({
   options,
+  today,
   value,
   onChange,
   disabled = false,
@@ -53,10 +56,12 @@ export function DateFilter({
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
       >
-        <option value="all">Alle Termine ({options.length})</option>
+        <option value="all">
+          Alle Termine ({options.filter((date) => date >= today).length})
+        </option>
         {options.map((date) => (
           <option key={date} value={date}>
-            {formatDate(date)}
+            {date < today ? `${formatDate(date)} (vergangen)` : formatDate(date)}
           </option>
         ))}
       </select>
